@@ -1,0 +1,4 @@
+#!/usr/bin/env bash
+
+## npm
+docker run --rm -ti -v "$PWD":/var/nodejs -w /var/nodejs baykier/node:9.4.0  gulp "$@"

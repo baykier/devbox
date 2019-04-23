@@ -1,0 +1,9 @@
+#!/bin/sh
+set -e
+
+## 第一个参数不是python
+if [ "${1#-}" != "python" ]; then
+	set -- python "$@"
+fi
+
+exec "$@"

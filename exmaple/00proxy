@@ -1,0 +1,2 @@
+Acquire::http::proxy "http://192.168.11.200:1080";
+Acquire::https::proxy "https://192.168.11.200:1080";

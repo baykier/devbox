@@ -1,0 +1,9 @@
+#!/bin/sh
+set -e
+
+## 第一个参数不是composer
+if [ "${1#-}" != "composer" ]; then
+	set -- composer "$@"
+fi
+
+exec "$@"

@@ -1,0 +1,9 @@
+#!/bin/sh
+set -e
+
+## 第一个参数不是psysh
+if [ "${1#-}" != "psysh" ]; then
+	set -- psysh "$@"
+fi
+
+exec "$@"

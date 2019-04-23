@@ -1,0 +1,5 @@
+#!/usr/bin/env bash
+
+## cnpm
+## https://github.com/cnpm/cnpm/issues/101
+docker run --rm -ti -v "$PWD":/var/nodejs -w /var/nodejs baykier/node:9.4.0  cnpm i --by=npm --no-bin-links "$@"

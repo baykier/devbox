@@ -1,0 +1,3 @@
+#!/usr/bin/env bash
+
+docker run --rm -ti -v "$PWD":/project baykier/golang:1.9.2 "$@"

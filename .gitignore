@@ -1,5 +1,5 @@
 # Created by .ignore support plugin (hsz.mobi)
-data/
+data/*
 log/php/*
 log/mysql/*
 log/nginx/*
@@ -15,6 +15,7 @@ __pycache__/
 # 忽略的文件
 
 !project/.gitkeep
+!data/.gitkeep
 !data/mysql/.gitkeep
 !data/mongo/.gitkeep
 !log/mysql/.gitkeep

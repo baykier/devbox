@@ -1,0 +1,9 @@
+version: "2.1"
+services:
+  v2ray:
+    image: v2ray/official
+    volumes:
+       - ./v2ray:/etc/v2ray
+    ports:
+       - "8888:8888/udp"
+    command: v2ray -config=/etc/v2ray/config.json

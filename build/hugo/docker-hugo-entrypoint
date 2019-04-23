@@ -1,0 +1,9 @@
+#!/bin/sh
+set -e
+
+## 第一个参数不是hugo
+if [ "${1#-}" != "hugo" ]; then
+	set -- hugo "$@"
+fi
+
+exec "$@"

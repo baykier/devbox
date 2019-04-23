@@ -1,0 +1,9 @@
+#!/bin/sh
+set -e
+
+## 第一个参数不是phpunit
+if [ "${1#-}" != "phpunit" ]; then
+	set -- phpunit "$@"
+fi
+
+exec "$@"

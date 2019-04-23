@@ -1,0 +1,2 @@
+#!/usr/bin/env bash
+docker run --rm -ti -v $PWD:/var/composer baykier/composer:1.5.6 "$@"

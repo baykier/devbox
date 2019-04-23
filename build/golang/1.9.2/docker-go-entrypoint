@@ -1,0 +1,9 @@
+#!/bin/sh
+set -e
+
+## 第一个参数不是go
+if [ "${1#-}" != "go" ]; then
+	set -- go "$@"
+fi
+
+exec "$@"
