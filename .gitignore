@@ -1,0 +1,26 @@
+# Created by .ignore support plugin (hsz.mobi)
+data/
+log/php/*
+log/mysql/*
+log/nginx/*
+log/mongo/*
+project/*
+conf/*
+.env
+docker-compose.yml
+.idea/*
+.vagrant/*
+__pycache__/
+
+# 忽略的文件
+
+!project/.gitkeep
+!data/mysql/.gitkeep
+!data/mongo/.gitkeep
+!log/mysql/.gitkeep
+!log/mongo/.gitkeep
+!log/nginx/.gitkeep
+!log/php/.gitkeep
+
+
+
