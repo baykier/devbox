@@ -142,22 +142,7 @@ services:
         volumes:
             - /home/vagrant/projects:/project
             - ./log:/var/log
-            - ./data:/var/data
-    ### shadowsock
-    client:
-        image: easypi/shadowsocks-libev
-        command:
-            ss-local -s 35.194.218.16
-                    -p 7758
-                    -m aes-256-gcm
-                    -k CcnzzjKvsboy113
-                    -b 0.0.0.0
-                    -l 1080
-                    -t 60
-                    --fast-open
-        ports:
-            - "1080:1080"
-        restart: always
+            - ./data:/var/data    
     ### sshtunnel
     sshtunnel:
         image: baykier/sshtunnel
