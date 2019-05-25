@@ -22,6 +22,7 @@ __pycache__/
 !log/mongo/.gitkeep
 !log/nginx/.gitkeep
 !log/php/.gitkeep
+!conf/.gitkeep
 
 
 
