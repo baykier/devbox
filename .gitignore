@@ -5,7 +5,7 @@ log/mysql/*
 log/nginx/*
 log/mongo/*
 project/*
-conf/*
+conf/nginx/*
 .env
 docker-compose.yml
 .idea/*
@@ -22,7 +22,7 @@ __pycache__/
 !log/mongo/.gitkeep
 !log/nginx/.gitkeep
 !log/php/.gitkeep
-!conf/.gitkeep
+!conf/nginx/.gitkeep
 
 
 
