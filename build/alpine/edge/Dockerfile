@@ -14,8 +14,6 @@ MAINTAINER baykier <1035666345@qq.com>
 ## http://mirrors.aliyun.com/
 
 RUN set -x \
-    && echo https://mirrors.aliyun.com/alpine/${ALPINE_VERSION}/main > /etc/apk/repositories \
-    && echo https://mirrors.aliyun.com/alpine/${ALPINE_VERSION}/community >> /etc/apk/repositories \
     && apk --no-cache add shadow
 
 

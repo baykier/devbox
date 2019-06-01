@@ -164,12 +164,6 @@ RUN set -ex \
     && rm -fr /tmp/* \
     && apk del .phpize-deps
 
-# mcrypt
-
-RUN set -ex \
-    
-
-
 ## 配置文件
 COPY ./php.ini-dev ${PHP_INI_DIR}/php.ini
 COPY ./php-ext.conf.d/* ${PHP_INI_DIR}/conf.d/

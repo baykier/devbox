@@ -52,12 +52,12 @@ ENV PHP_LDFLAGS="-Wl,-O1 -Wl,--hash-style=both -pie"
 
 ENV GPG_KEYS 1729F83938DA44E27BA0F4D3DBDB397470D12172 B1B44D8F021E4E2D6021E995DC9FF8D3EE5AF27F
 
-ENV PHP_VERSION 7.2.0
+ENV PHP_VERSION 7.2.19
 ## 换成国内镜像
-## http://php.net/get/php-7.2.0.tar.xz/from/a/mirror
-ENV PHP_URL http://cn2.php.net/get/php-${PHP_VERSION}.tar.xz/from/this/mirror
-ENV PHP_ASC_URL https://secure.php.net/get/php-${PHP_VERSION}.tar.xz.asc/from/this/mirror
-ENV PHP_SHA256 87572a6b924670a5d4aac276aaa4a94321936283df391d702c845ffc112db095
+## https://www.php.net/distributions/php-7.2.19.tar.xz
+ENV PHP_URL https://www.php.net/distributions/php-${PHP_VERSION}.tar.xz/from/this/mirror
+ENV PHP_ASC_URL https://www.php.net/distributions/php-${PHP_VERSION}.tar.xz.asc/from/this/mirror
+ENV PHP_SHA256 "4ffa2404a88d60e993a9fe69f829ebec3eb1e006de41b6048ce5e91bbeaa9282"
 ENV PHP_MD5 ""
 
 RUN set -xe; \
@@ -70,9 +70,10 @@ RUN set -xe; \
 	cd /usr/src; \
 	\
 	wget -O php.tar.xz "$PHP_URL"; \
+	ls -alF ;\
 	\
 	if [ -n "$PHP_SHA256" ]; then \
-		echo "$PHP_SHA256 *php.tar.xz" | sha256sum -c -; \
+		echo "$PHP_SHA256  *php.tar.xz" | sha256sum -c -; \
 	fi; \
 	if [ -n "$PHP_MD5" ]; then \
 		echo "$PHP_MD5 *php.tar.xz" | md5sum -c -; \
