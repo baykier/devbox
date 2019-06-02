@@ -83,20 +83,17 @@ ARG PHALCON_VERSION=3.4.2
 ARG PHALCON_EXT_PATH=php7/64bits
 
 RUN set -xe && \
-        # Compile Phalcon
-        curl -LO https://github.com/phalcon/cphalcon/archive/v${PHALCON_VERSION}.tar.gz && \
-        tar xzf ${PWD}/v${PHALCON_VERSION}.tar.gz && \
-        docker-php-ext-install -j $(getconf _NPROCESSORS_ONLN) ${PWD}/cphalcon-${PHALCON_VERSION}/build/${PHALCON_EXT_PATH} && \
-        # Remove all temp files
-        rm -r \
-            ${PWD}/v${PHALCON_VERSION}.tar.gz \
-            ${PWD}/cphalcon-${PHALCON_VERSION} \
-		# devtools
-		&& curl -LO https://github.com/phalcon/phalcon-devtools/archive/v${INSTALL_VERSION}.tar.gz \
-		&&	tar xzf v${INSTALL_VERSION}.tar.gz \
-		&&	rm -rf v${INSTALL_VERSION}.tar.gz \
-		&&	mv phalcon-devtools-${INSTALL_VERSION} /usr/src/phalcon-devtools \
-		&&	ln -sf /usr/src/phalcon-devtools/phalcon.php /usr/local/bin/phalcon 
+    # Compile Phalcon
+  	curl -LO https://github.com/phalcon/cphalcon/archive/v${PHALCON_VERSION}.tar.gz && \
+    tar xzf v${PHALCON_VERSION}.tar.gz && cd cphalcon-${PHALCON_VERSION}/build && sh install && \
+    echo "extension=phalcon.so" > /usr/local/etc/php/conf.d/phalcon.ini && \
+    cd ../.. && rm -rf v${PHALCON_VERSION}.tar.gz cphalcon-${PHALCON_VERSION} 
+	# devtools
+	&& curl -LO https://github.com/phalcon/phalcon-devtools/archive/v${INSTALL_VERSION}.tar.gz \
+	&&	tar xzf v${INSTALL_VERSION}.tar.gz \
+	&&	rm -rf v${INSTALL_VERSION}.tar.gz \
+	&&	mv phalcon-devtools-${INSTALL_VERSION} /usr/src/phalcon-devtools \
+	&&	ln -sf /usr/src/phalcon-devtools/phalcon.php /usr/local/bin/phalcon 
 
 
 ## 配置文件
