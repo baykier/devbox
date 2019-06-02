@@ -94,7 +94,7 @@ RUN set -xe; \
 COPY docker-php-* /usr/local/bin/
 
 RUN set -xe \
-	&& apk add --no-cache --virtual .build-deps \
+	&& apk add --no-cache --update --virtual .build-deps \
 		$PHPIZE_DEPS \
 		coreutils \
 		curl-dev \

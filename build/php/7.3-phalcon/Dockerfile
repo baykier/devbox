@@ -2,7 +2,7 @@
 ##                                      Dockerfile for baykier/php:7.2-phalcon dev
 ##
 
-FROM php:7.2-fpm-alpine3.9
+FROM mileschou/phalcon:7.3-fpm-alpine
 
 MAINTAINER baykier 1035666345@qq.com
 
@@ -12,7 +12,7 @@ MAINTAINER baykier 1035666345@qq.com
 ENV GOSU_VERSION 1.11
 RUN set -eux; \
 	\
-	apk add --no-cache --virtual .gosu-deps \
+	apk add --no-cache --update --virtual .gosu-deps \
 		dpkg \
 		gnupg \
 	; \
@@ -44,22 +44,6 @@ RUN set -ex \
     && apk update \
     && apk add ca-certificates git 
 
-## 安装phalcon
-ARG PHALCON_VERSION=3.4.2
-ARG PHALCON_EXT_PATH=php7/64bits
-
-RUN set -xe && \
-        # Compile Phalcon
-        curl -LO https://github.com/phalcon/cphalcon/archive/v${PHALCON_VERSION}.tar.gz && \
-        tar xzf ${PWD}/v${PHALCON_VERSION}.tar.gz && \
-        docker-php-ext-install -j $(getconf _NPROCESSORS_ONLN) ${PWD}/cphalcon-${PHALCON_VERSION}/build/${PHALCON_EXT_PATH} && \
-        # Remove all temp files
-        rm -r \
-            ${PWD}/v${PHALCON_VERSION}.tar.gz \
-            ${PWD}/cphalcon-${PHALCON_VERSION}
-
-COPY docker-phalcon-* /usr/local/bin/
-
 ## 安装gd扩展
 RUN set -x \
     && apk add 	--no-cache  freetype \
@@ -88,18 +72,38 @@ RUN set -x \
     && docker-php-ext-install bcmath \
     && docker-php-source delete
 
+## 设置工作目录
+ENV WORKDIR_SPACE /project
+
+RUN set -ex \
+    && mkdir -p ${WORKDIR_SPACE} /var/log/php  
+
+## 安装phalcon
+ARG PHALCON_VERSION=3.4.2
+ARG PHALCON_EXT_PATH=php7/64bits
+
+RUN set -xe && \
+        # Compile Phalcon
+        curl -LO https://github.com/phalcon/cphalcon/archive/v${PHALCON_VERSION}.tar.gz && \
+        tar xzf ${PWD}/v${PHALCON_VERSION}.tar.gz && \
+        docker-php-ext-install -j $(getconf _NPROCESSORS_ONLN) ${PWD}/cphalcon-${PHALCON_VERSION}/build/${PHALCON_EXT_PATH} && \
+        # Remove all temp files
+        rm -r \
+            ${PWD}/v${PHALCON_VERSION}.tar.gz \
+            ${PWD}/cphalcon-${PHALCON_VERSION} \
+		# devtools
+		&& curl -LO https://github.com/phalcon/phalcon-devtools/archive/v${INSTALL_VERSION}.tar.gz \
+		&&	tar xzf v${INSTALL_VERSION}.tar.gz \
+		&&	rm -rf v${INSTALL_VERSION}.tar.gz \
+		&&	mv phalcon-devtools-${INSTALL_VERSION} /usr/src/phalcon-devtools \
+		&&	ln -sf /usr/src/phalcon-devtools/phalcon.php /usr/local/bin/phalcon 
+
 
 ## 配置文件
 COPY ./php.ini-dev ${PHP_INI_DIR}/php.ini
 COPY ./php-ext.conf.d/* ${PHP_INI_DIR}/conf.d/
 COPY ./php-fpm.d/* ${PHP_INI_DIR}/php-fpm.d/
 COPY ./php-fpm.conf /usr/local/etc/php-fpm.conf
-
-## 设置工作目录
-ENV WORKDIR_SPACE /project
-
-RUN set -ex \
-    && mkdir -p ${WORKDIR_SPACE} /var/log/php  
 
 
 WORKDIR ${WORKDIR_SPACE}
@@ -109,4 +113,5 @@ VOLUME ${WORKDIR_SPACE}
 EXPOSE 9000
 
 ENTRYPOINT gosu root php-fpm
+
 
