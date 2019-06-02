@@ -91,14 +91,9 @@ RUN set -xe \
 	&& cd cphalcon-${PHALCON_VERSION}/build \
 	&& sh install \
     &&  echo "extension=phalcon.so" > /usr/local/etc/php/conf.d/phalcon.ini  \
-    &&  cd ../.. && rm -rf v${PHALCON_VERSION}.tar.gz cphalcon-${PHALCON_VERSION} \
-	&& apk del .phpize-deps \
-	# devtools
-	&& curl -LO https://github.com/phalcon/phalcon-devtools/archive/v${INSTALL_VERSION}.tar.gz \
-	&&	tar xzf v${INSTALL_VERSION}.tar.gz \
-	&&	rm -rf v${INSTALL_VERSION}.tar.gz \
-	&&	mv phalcon-devtools-${INSTALL_VERSION} /usr/src/phalcon-devtools \
-	&&	ln -sf /usr/src/phalcon-devtools/phalcon.php /usr/local/bin/phalcon 
+    &&  cd ../.. \
+	&& rm -rf v${PHALCON_VERSION}.tar.gz cphalcon-${PHALCON_VERSION} \
+	&& apk del .phpize-deps 
 
 
 ## 配置文件
