@@ -82,12 +82,15 @@ RUN set -ex \
 ARG PHALCON_VERSION=3.4.2
 ARG PHALCON_EXT_PATH=php7/64bits
 
-RUN set -xe && \
+RUN set -xe \
     # Compile Phalcon
-  	curl -LO https://github.com/phalcon/cphalcon/archive/v${PHALCON_VERSION}.tar.gz && \
-    tar xzf v${PHALCON_VERSION}.tar.gz && cd cphalcon-${PHALCON_VERSION}/build && sh install && \
-    echo "extension=phalcon.so" > /usr/local/etc/php/conf.d/phalcon.ini && \
-    cd ../.. && rm -rf v${PHALCON_VERSION}.tar.gz cphalcon-${PHALCON_VERSION} \
+	&& apk add --no-cache --virtual .phpize-deps \
+                                    ${PHPIZE_DEPS} \
+  	&& curl -LO https://github.com/phalcon/cphalcon/archive/v${PHALCON_VERSION}.tar.gz \
+    &&  tar xzf v${PHALCON_VERSION}.tar.gz && cd cphalcon-${PHALCON_VERSION}/build && sh install \
+    &&  echo "extension=phalcon.so" > /usr/local/etc/php/conf.d/phalcon.ini && \
+    &&  cd ../.. && rm -rf v${PHALCON_VERSION}.tar.gz cphalcon-${PHALCON_VERSION} \
+	&& apk del .phpize-deps \
 	# devtools
 	&& curl -LO https://github.com/phalcon/phalcon-devtools/archive/v${INSTALL_VERSION}.tar.gz \
 	&&	tar xzf v${INSTALL_VERSION}.tar.gz \
