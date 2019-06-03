@@ -22,6 +22,7 @@ services:
             - "dev.crm.com:172.28.1.1"
             - "dev.wlb.com:172.28.1.1"
             - "dev.wanglibao.com:172.28.1.1"
+            - "gjadmin.com:172.28.1.1"
         networks: 
             devbox:
                 ipv4_address: 172.28.1.1
@@ -60,6 +61,19 @@ services:
             networks: 
                 devbox:
                     ipv4_address: 172.28.1.3
+            restart: always
+    ## php-fpm 7.3
+    php-fpm-7.3:
+            image: baykier/php:7.3-phalcon
+            volumes_from:
+                - "data-volume"
+            volumes:
+                - ./log/php/php-fpm-7.3:/var/log/php               
+            links:
+                - mysql
+            networks: 
+                devbox:
+                    ipv4_address: 172.28.1.13
             restart: always
     ### mysql service
     mysql:
