@@ -97,6 +97,8 @@ RUN set -xe \
 ## phalcon devtools
 ENV DEVTOOLS_VERSION=3.4.2
 RUN set -ex \
+	&& apk add --no-cache \
+       				unzip \
 	&& curl -LO https://github.com/phalcon/phalcon-devtools/archive/v${DEVTOOLS_VERSION}.tar.gz \
     && tar xzf v${DEVTOOLS_VERSION}.tar.gz \
     && mv phalcon-devtools-${DEVTOOLS_VERSION} /usr/local/phalcon-devtools \
