@@ -94,7 +94,15 @@ RUN set -xe \
     &&  cd ../.. \
 	&& rm -rf v${PHALCON_VERSION}.tar.gz cphalcon-${PHALCON_VERSION} \
 	&& apk del .phpize-deps 
+## phalcon devtools
 
+RUN set -xe \
+	&& cd ~ \
+	&& git clone git://github.com/phalcon/phalcon-devtools.git \
+	&& cd phalcon-devtools \
+	&& ./phalcon.sh \
+	&& ln -s ~/phalcon-devtools/phalcon.php /usr/local/bin/phalcon \
+	&& chmod a+x /usr/bin/phalcon
 
 ## 配置文件
 COPY ./php.ini-dev ${PHP_INI_DIR}/php.ini
