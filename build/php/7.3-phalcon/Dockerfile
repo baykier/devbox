@@ -72,6 +72,22 @@ RUN set -x \
     && docker-php-ext-install bcmath \
     && docker-php-source delete
 
+## 安装gd扩展
+RUN set -x \
+    && apk add 	--no-cache  freetype \
+               			    libpng \
+               			    libjpeg-turbo \
+               			    freetype-dev \
+               			    libpng-dev \
+               			    libjpeg-turbo-dev \
+    && docker-php-ext-configure     gd \
+               			            --with-gd \
+               			            --with-freetype-dir=/usr/include \
+               			            --with-png-dir=/usr/include \
+               			            --with-jpeg-dir=/usr/include \
+    && docker-php-ext-install gd \
+    && docker-php-source delete
+
 ## 设置工作目录
 ENV WORKDIR_SPACE /project
 
