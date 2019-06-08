@@ -105,12 +105,11 @@ RUN set -xe \
   	&& curl -LO https://github.com/phalcon/cphalcon/archive/v${PHALCON_VERSION}.tar.gz \
     &&  tar xzf v${PHALCON_VERSION}.tar.gz \
 	&& cd cphalcon-${PHALCON_VERSION}/build \
-	&& docker-php-ext-configure phalcon \
-	&& docker-php-ext-install phalcon \   
+	&& sh install \
     &&  cd ../.. \
 	&& rm -rf v${PHALCON_VERSION}.tar.gz cphalcon-${PHALCON_VERSION} \
-	&& docker-php-source delete \
-	&& apk del .phpize-deps 
+	&& apk del .phpize-deps \
+	&&  docker-php-source delete
 ## phalcon devtools
 
 RUN set -xe \
