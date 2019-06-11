@@ -16,8 +16,8 @@ services:
             - "80:80"
             - "443:443"
         links:
-            - php-fpm-7.2
-            - php-fpm-5.6
+            - php-fpm-7.1
+            # - php-fpm-5.6
         extra_hosts:    
             - "dev.crm.com:172.28.1.1"
             - "dev.wlb.com:172.28.1.1"
@@ -75,6 +75,20 @@ services:
                 devbox:
                     ipv4_address: 172.28.1.13
             restart: always
+    ## php-fpm 7.1
+    php-fpm-7.1:
+            image: baykier/php:lumen-fpm-7.1
+            volumes_from:
+                - "data-volume"
+            volumes:
+                - ./log/php/php-fpm-7.1:/var/log/php               
+            links:
+                - mysql
+                - mysql-5.7
+            networks: 
+                devbox:
+                    ipv4_address: 172.28.1.15
+            restart: always
     ### mysql service
     mysql:
         image: baykier/devbox:mysql-10.1.21
@@ -91,6 +105,23 @@ services:
         networks: 
             devbox:
                 ipv4_address: 172.28.1.4
+        restart: always
+    # mysql 5.7
+    mysql-5.7:
+        image: percona:ps-5.7.26 
+        environment:
+            - MYSQL_DATABASE=${DB_DATABASE}
+            - MYSQL_USER=${DB_USER}
+            - MYSQL_PASSWORD=${DB_PASSWORD}
+            - MYSQL_ROOT_PASSWORD=${DB_ROOT_PASSWORD}
+        volumes:
+            - ./data/mysql-5.7:/var/lib/mysql
+            - ./log/mysql5.7:/var/log/mysql
+        ports:
+            - "3307:3306"
+        networks: 
+            devbox:
+                ipv4_address: 172.28.1.36
         restart: always
 
     ### Mongodb
