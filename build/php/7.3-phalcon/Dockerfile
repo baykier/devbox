@@ -63,7 +63,7 @@ RUN set -x \
 ## 安装mysql 扩展
 RUN set -x \
     && docker-php-source extract \
-    && docker-php-ext-install mysqlnd \
+    && docker-php-ext-install pdo_mysql \
     && docker-php-source delete
 
 ## 安装bcmath 扩展
