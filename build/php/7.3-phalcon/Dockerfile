@@ -63,7 +63,7 @@ RUN set -x \
 ## 安装mysql 扩展
 RUN set -x \
     && docker-php-source extract \
-    && docker-php-ext-install pdo_mysql \
+    && docker-php-ext-install mysqlnd \
     && docker-php-source delete
 
 ## 安装bcmath 扩展
@@ -118,6 +118,18 @@ RUN set -xe \
 	&& cd phalcon-devtools \
 	&& ln -s $(pwd)/phalcon.php /usr/bin/phalcon \
 	&& chmod ugo+x /usr/bin/phalcon
+
+## imap 扩展
+
+RUN set -x \
+	&& apk add --no-cache  imap-dev \
+	&& apk add --no-cache --virtual .phpize-deps \
+                                    ${PHPIZE_DEPS} \
+	&& docker-php-ext-configure imap --with-imap --with-imap-ssl \
+	&& docker-php-ext-install imap \  
+	&& apk del .phpize-deps \ 
+    && docker-php-source delete
+
 
 ## 配置文件
 COPY ./php.ini-dev ${PHP_INI_DIR}/php.ini
