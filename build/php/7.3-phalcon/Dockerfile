@@ -123,6 +123,7 @@ RUN set -xe \
 
 RUN set -x \
 	&& apk add --no-cache  imap-dev \
+							openssl-dev \
 	&& apk add --no-cache --virtual .phpize-deps \
                                     ${PHPIZE_DEPS} \
 	&& docker-php-ext-configure imap --with-imap --with-imap-ssl \
