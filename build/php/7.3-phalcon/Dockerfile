@@ -119,6 +119,19 @@ RUN set -xe \
 	&& ln -s $(pwd)/phalcon.php /usr/bin/phalcon \
 	&& chmod ugo+x /usr/bin/phalcon
 
+## imap 扩展
+
+RUN set -x \
+	&& apk add --no-cache  imap-dev \
+							openssl-dev \
+	&& apk add --no-cache --virtual .phpize-deps \
+                                    ${PHPIZE_DEPS} \
+	&& docker-php-ext-configure imap --with-imap --with-imap-ssl \
+	&& docker-php-ext-install imap \  
+	&& apk del .phpize-deps \ 
+    && docker-php-source delete
+
+
 ## 配置文件
 COPY ./php.ini-dev ${PHP_INI_DIR}/php.ini
 #COPY ./php-ext.conf.d/* ${PHP_INI_DIR}/conf.d/
