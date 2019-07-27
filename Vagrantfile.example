@@ -103,5 +103,11 @@ Vagrant.configure(2) do |config|
   # config.vm.provision "shell", inline: <<-SHELL
   #   sudo apt-get update
   #   sudo apt-get install -y apache2
-  # SHELL
+  #
+  #   # composer swap mem add
+  #   sudo /bin/dd if=/dev/zero of=/var/swap.1 bs=1G count=5
+  #   sudo /sbin/mkswap /var/swap.1
+  #   sudo /sbin/swapon /var/swap.1
+  #
+  #  SHELL
 end
