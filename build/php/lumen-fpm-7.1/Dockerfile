@@ -35,7 +35,7 @@ RUN set -ex \
         && make install \
     ) \
     && docker-php-ext-enable tideways \
-    && rm -fr /tmp/* \
+    && rm -fr /tmp/tideways* \
     && apk del .phpize-deps
 
 # PHP
