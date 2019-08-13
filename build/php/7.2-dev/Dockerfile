@@ -145,7 +145,7 @@ RUN set -ex \
 ## 安装tideways
 ## refer https://github.com/tideways/php-xhprof-extension
 
-ENV TIDEWAYS_VERSION "4.1.6"
+ENV TIDEWAYS_VERSION "5.0.18"
 
 RUN set -ex \
     ## 安装tideways-php-ext

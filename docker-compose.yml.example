@@ -211,6 +211,9 @@ services:
         ports:
             - "9222:9222"       
         restart: always   
+        dns:
+            - 114.114.114.114
+            - 8.8.8.8
         networks: 
             devbox:
                 ipv4_address: 172.28.1.30

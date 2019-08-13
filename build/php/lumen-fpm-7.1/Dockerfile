@@ -38,6 +38,14 @@ RUN set -ex \
     && rm -fr /tmp/tideways* \
     && apk del .phpize-deps
 
+
+## 安装zip扩展
+RUN set -x \
+    && apk add --no-cache zlib-dev \
+    && docker-php-ext-configure zip \
+    && docker-php-ext-install zip \
+    && docker-php-source delete
+
 # PHP
 ADD ./logging.ini /usr/local/etc/php/conf.d
 ADD ./lumen.ini /usr/local/etc/php/conf.d
