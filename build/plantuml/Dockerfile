@@ -15,5 +15,9 @@ RUN apk add --no-cache graphviz ttf-droid ttf-droid-nonlatin curl \
     && chmod +x /bin/plantuml.jar \
     && apk del curl
 
+WORKDIR "/project"
+
+VOLUME "/project"
+
 ENTRYPOINT [ "java", "-jar", "/bin/plantuml.jar"]
 CMD [ "-h" ]
