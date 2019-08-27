@@ -18,12 +18,12 @@ services:
         links:
             - php-fpm-7.1
             # - php-fpm-5.6
-        extra_hosts:    
+        extra_hosts:
             - "dev.crm.com:172.28.1.1"
             - "dev.wlb.com:172.28.1.1"
             - "dev.wanglibao.com:172.28.1.1"
             - "gjadmin.com:172.28.1.1"
-        networks: 
+        networks:
             devbox:
                 ipv4_address: 172.28.1.1
         restart: always
@@ -34,7 +34,7 @@ services:
             - "data-volume"
         volumes:
             - ./log/php/php-fpm-5.6:/var/log/php
-        extra_hosts:    
+        extra_hosts:
             - "dev.crm.com:172.28.1.1"
             - "dev.wlb.com:172.28.1.1"
             - "dev.wanglibao.com:172.28.1.1"
@@ -42,9 +42,9 @@ services:
             - mysql
             - mongo
             - redis
-        networks: 
+        networks:
             devbox:
-                ipv4_address: 172.28.1.2      
+                ipv4_address: 172.28.1.2
         restart: always
     ## php-fpm 7.2
     php-fpm-7.2:
@@ -58,7 +58,7 @@ services:
                 - mysql
                 - mongo
                 - redis
-            networks: 
+            networks:
                 devbox:
                     ipv4_address: 172.28.1.3
             restart: always
@@ -68,10 +68,10 @@ services:
             volumes_from:
                 - "data-volume"
             volumes:
-                - ./log/php/php-fpm-7.3:/var/log/php               
+                - ./log/php/php-fpm-7.3:/var/log/php
             links:
                 - mysql
-            networks: 
+            networks:
                 devbox:
                     ipv4_address: 172.28.1.13
             restart: always
@@ -81,11 +81,11 @@ services:
             volumes_from:
                 - "data-volume"
             volumes:
-                - ./log/php/php-fpm-7.1:/var/log/php               
+                - ./log/php/php-fpm-7.1:/var/log/php
             links:
                 - mysql
                 - mysql-5.7
-            networks: 
+            networks:
                 devbox:
                     ipv4_address: 172.28.1.15
             restart: always
@@ -102,13 +102,13 @@ services:
             - ./log/mysql:/var/log/mysql
         ports:
             - "3306:3306"
-        networks: 
+        networks:
             devbox:
                 ipv4_address: 172.28.1.4
         restart: always
     # mysql 5.7
     mysql-5.7:
-        image: percona:ps-5.7.26 
+        image: percona:ps-5.7.26
         environment:
             - MYSQL_DATABASE=${DB_DATABASE}
             - MYSQL_USER=${DB_USER}
@@ -119,7 +119,7 @@ services:
             - ./log/mysql5.7:/var/log/mysql
         ports:
             - "3307:3306"
-        networks: 
+        networks:
             devbox:
                 ipv4_address: 172.28.1.36
         restart: always
@@ -145,17 +145,17 @@ services:
             - ../dump:/var/mongo-dump
         ports:
             - "27017:27017"
-        networks: 
+        networks:
             devbox:
                 ipv4_address: 172.28.1.5
         restart: always
 
-    ### emscripten 
+    ### emscripten
     emscripten:
         ## for webassembly
         ## https://hub.docker.com/r/trzeci/emscripten/
         ## https://github.com/asRIA/emscripten-docker
-        
+
         image: trzeci/emscripten
         volumes_from:
             - "data-volume"
@@ -167,7 +167,7 @@ services:
             context: ./build/memcached/1.5.4
         ports:
             - "11211:11211"
-        networks: 
+        networks:
             devbox:
                 ipv4_address: 172.28.1.6
         restart: always
@@ -177,9 +177,25 @@ services:
             context: ./build/redis/4.0
         ports:
             - "6379:6379"
-        networks: 
+        networks:
             devbox:
                 ipv4_address: 172.28.1.7
+        restart: always
+    ## elasticsearch
+    ## https://www.elastic.co/guide/en/elasticsearch/reference/6.7/docker.html
+    es:
+        build:
+            context: build/elasticsearch/6.8.2
+        environment:
+            - "discovery.type=single-node"
+        ports:
+            - "9200:9200"
+            - "9300:9300"
+        volumes:
+           - /usr/share/elasticsearch/data
+        networks:
+            devbox:
+                ipv4_address: 172.28.6.25
         restart: always
     ### 数据卷
     data-volume:
@@ -187,7 +203,7 @@ services:
         volumes:
             - /home/vagrant/projects:/project
             - ./log:/var/log
-            - ./data:/var/data    
+            - ./data:/var/data
     ### sshtunnel
     sshtunnel:
         image: baykier/sshtunnel
@@ -201,24 +217,24 @@ services:
             - SSH_USERNAME=sshtunnel
             - SSH_PASSPORD=sshtunnel
         restart: always
-        networks: 
+        networks:
             devbox:
                 ipv4_address: 172.28.1.20
 
     ### chrome headless
     chrome-headless:
-        image:  baykier/chrome-headless 
+        image:  baykier/chrome-headless
         ports:
-            - "9222:9222"       
-        restart: always   
+            - "9222:9222"
+        restart: always
         dns:
             - 114.114.114.114
             - 8.8.8.8
-        networks: 
+        networks:
             devbox:
                 ipv4_address: 172.28.1.30
 
-networks: 
+networks:
     default:
         driver: bridge
         ipam:
@@ -230,8 +246,8 @@ networks:
             driver: default
             config:
                 - subnet: 172.28.0.0/16
-                
-        
+
+
 
 
 
