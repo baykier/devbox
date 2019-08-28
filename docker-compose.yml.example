@@ -17,12 +17,14 @@ services:
             - "443:443"
         links:
             - php-fpm-7.1
-            # - php-fpm-5.6
+            - php-fpm-7.3
+            - kibana
+            #- chrome-headless
+            #- es
         extra_hosts:
-            - "dev.crm.com:172.28.1.1"
-            - "dev.wlb.com:172.28.1.1"
-            - "dev.wanglibao.com:172.28.1.1"
+            - "icxinli.com:172.28.1.1"
             - "gjadmin.com:172.28.1.1"
+            - "laravue.com:172.28.1.1"
         networks:
             devbox:
                 ipv4_address: 172.28.1.1
@@ -70,7 +72,11 @@ services:
             volumes:
                 - ./log/php/php-fpm-7.3:/var/log/php
             links:
-                - mysql
+                - mysql-5.7
+            extra_hosts:
+                - "icxinli.com:172.28.1.1"
+                - "gjadmin.com:172.28.1.1"
+                - "laravue.com:172.28.1.1"
             networks:
                 devbox:
                     ipv4_address: 172.28.1.13
@@ -83,8 +89,15 @@ services:
             volumes:
                 - ./log/php/php-fpm-7.1:/var/log/php
             links:
-                - mysql
+                #- mysql
                 - mysql-5.7
+                - redis
+                - elasticsearch
+                - logstash
+            extra_hosts:
+                - "icxinli.com:172.28.1.1"
+                - "gjadmin.com:172.28.1.1"
+                - "laravue.com:172.28.1.1"
             networks:
                 devbox:
                     ipv4_address: 172.28.1.15
@@ -101,7 +114,7 @@ services:
             - ./data/mysql:/var/lib/mysql
             - ./log/mysql:/var/log/mysql
         ports:
-            - "3306:3306"
+            - "3336:3306"
         networks:
             devbox:
                 ipv4_address: 172.28.1.4
@@ -118,7 +131,7 @@ services:
             - ./data/mysql-5.7:/var/lib/mysql
             - ./log/mysql5.7:/var/log/mysql
         ports:
-            - "3307:3306"
+            - "3306:3306"
         networks:
             devbox:
                 ipv4_address: 172.28.1.36
@@ -148,6 +161,16 @@ services:
         networks:
             devbox:
                 ipv4_address: 172.28.1.5
+        restart: always
+
+    ## mongodb-4.2
+    mongodb-4.2:
+        image: mongo:4.2.0-bionic
+        ports:
+            - "27018:27017"
+        networks:
+            devbox:
+                ipv4_address: 172.28.11.5
         restart: always
 
     ### emscripten
@@ -181,22 +204,6 @@ services:
             devbox:
                 ipv4_address: 172.28.1.7
         restart: always
-    ## elasticsearch
-    ## https://www.elastic.co/guide/en/elasticsearch/reference/6.7/docker.html
-    es:
-        build:
-            context: build/elasticsearch/6.8.2
-        environment:
-            - "discovery.type=single-node"
-        ports:
-            - "9200:9200"
-            - "9300:9300"
-        volumes:
-           - /usr/share/elasticsearch/data
-        networks:
-            devbox:
-                ipv4_address: 172.28.6.25
-        restart: always
     ### 数据卷
     data-volume:
         image: tianon/true
@@ -227,12 +234,94 @@ services:
         ports:
             - "9222:9222"
         restart: always
+        extra_hosts:
+            - "icxinli.com:172.28.1.1"
         dns:
             - 114.114.114.114
             - 8.8.8.8
         networks:
             devbox:
-                ipv4_address: 172.28.1.30
+                ipv4_address: 172.28.1.55
+    ### python for android
+    buildozer:
+        privileged: true
+        image: guysoft/p4a:p4a-py3-api28ndk21
+        container_name: buildozer
+        tty: true
+        entrypoint: /bin/sh
+        volumes:
+            - ./:/buildozer/
+            # The following volume let ubuntu machines push android apps via adb
+            - /dev/bus/usb:/dev/bus/usb
+            # The followimg volume lets you run android sdk GUI and manage your sdks
+            - /tmp/.X11-unix:/tmp/.X11-unix
+    ## elasticsearch
+    ## https://www.elastic.co/guide/en/elasticsearch/reference/6.7/docker.html
+    es:
+        build:
+            context: build/elasticsearch/6.8.2
+        environment:
+            - "discovery.type=single-node"
+        ports:
+            - "9200:9200"
+            - "9300:9300"
+        volumes:
+           - /usr/share/elasticsearch/data
+        networks:
+            devbox:
+                ipv4_address: 172.28.6.25
+    ##
+    elasticsearch:
+        build:
+            context: build/elk/elasticsearch/
+            args:
+                ELK_VERSION: ${ELK_VERSION}
+        volumes:
+            - ./build/elk/elasticsearch/config/elasticsearch.yml:/usr/share/elasticsearch/config/elasticsearch.yml:ro
+            - /usr/share/elasticsearch/data
+        ports:
+            - "9200:9200"
+            - "9300:9300"
+        environment:
+            ES_JAVA_OPTS: "-Xmx256m -Xms256m"
+            ELASTIC_PASSWORD: devbox
+        networks:
+            devbox:
+                ipv4_address: 172.28.6.33
+    ## logstash
+    logstash:
+        build:
+            context: build/elk/logstash/
+            args:
+                ELK_VERSION: $ELK_VERSION
+        volumes:
+            - ./build/elk/logstash/config/logstash.yml:/usr/share/logstash/config/logstash.yml:ro
+            - ./build/elk/logstash/pipeline:/usr/share/logstash/pipeline:ro
+        ports:
+            - "5000:5000"
+            - "9600:9600"
+        environment:
+            LS_JAVA_OPTS: "-Xmx256m -Xms256m"
+        networks:
+            devbox:
+                    ipv4_address: 172.28.6.34
+        depends_on:
+            - elasticsearch
+    ## kibana
+    kibana:
+        build:
+            context: build/elk/kibana/
+            args:
+                ELK_VERSION: $ELK_VERSION
+        volumes:
+            - ./build/elk/kibana/config/kibana.yml:/usr/share/kibana/config/kibana.yml:ro
+        ports:
+            - "5601:5601"
+        networks:
+            devbox:
+                    ipv4_address: 172.28.6.35
+        depends_on:
+            - elasticsearch
 
 networks:
     default:
