@@ -256,21 +256,6 @@ services:
             # The followimg volume lets you run android sdk GUI and manage your sdks
             - /tmp/.X11-unix:/tmp/.X11-unix
     ## elasticsearch
-    ## https://www.elastic.co/guide/en/elasticsearch/reference/6.7/docker.html
-    es:
-        build:
-            context: build/elasticsearch/6.8.2
-        environment:
-            - "discovery.type=single-node"
-        ports:
-            - "9200:9200"
-            - "9300:9300"
-        volumes:
-           - /usr/share/elasticsearch/data
-        networks:
-            devbox:
-                ipv4_address: 172.28.6.25
-    ##
     elasticsearch:
         build:
             context: build/elk/elasticsearch/
