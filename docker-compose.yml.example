@@ -16,9 +16,9 @@ services:
             - "80:80"
             - "443:443"
         links:
-            - php-fpm-7.1
+            #- php-fpm-7.1
             - php-fpm-7.3
-            - kibana
+            #- kibana
             #- chrome-headless
             #- es
         extra_hosts:
@@ -42,7 +42,7 @@ services:
             - "dev.wanglibao.com:172.28.1.1"
         links:
             - mysql
-            - mongo
+            - mongodb
             - redis
         networks:
             devbox:
@@ -58,7 +58,7 @@ services:
                 #- ./log/php/tmp/7.2:/tmp
             links:
                 - mysql
-                - mongo
+                - mongodb
                 - redis
             networks:
                 devbox:
@@ -66,13 +66,15 @@ services:
             restart: always
     ## php-fpm 7.3
     php-fpm-7.3:
-            image: baykier/php:7.3-phalcon
+            image: baykier/php:7.3-fpm
             volumes_from:
                 - "data-volume"
             volumes:
                 - ./log/php/php-fpm-7.3:/var/log/php
             links:
-                - mysql-5.7
+                - mysql
+                - redis
+                - elasticsearch
             extra_hosts:
                 - "icxinli.com:172.28.1.1"
                 - "gjadmin.com:172.28.1.1"
@@ -83,17 +85,17 @@ services:
             restart: always
     ## php-fpm 7.1
     php-fpm-7.1:
-            image: baykier/php:lumen-fpm-7.1
+            image: baykier/php:fpm-7.1-dev
             volumes_from:
                 - "data-volume"
             volumes:
                 - ./log/php/php-fpm-7.1:/var/log/php
+                - ./conf/php/7.1-dev/php-ext.conf.d/xdebug.ini:/usr/local/etc/php/conf.d/docker-php-ext-xdebug.ini
             links:
-                #- mysql
-                - mysql-5.7
+                - mysql
                 - redis
                 - elasticsearch
-                - logstash
+                #- logstash
             extra_hosts:
                 - "icxinli.com:172.28.1.1"
                 - "gjadmin.com:172.28.1.1"
@@ -104,23 +106,6 @@ services:
             restart: always
     ### mysql service
     mysql:
-        image: baykier/devbox:mysql-10.1.21
-        environment:
-            - DB_DATABASE=${DB_DATABASE}
-            - DB_USER=${DB_USER}
-            - DB_PASSWORD=${DB_PASSWORD}
-            - DB_ROOT_PASSWORD=${DB_ROOT_PASSWORD}
-        volumes:
-            - ./data/mysql:/var/lib/mysql
-            - ./log/mysql:/var/log/mysql
-        ports:
-            - "3336:3306"
-        networks:
-            devbox:
-                ipv4_address: 172.28.1.4
-        restart: always
-    # mysql 5.7
-    mysql-5.7:
         image: percona:ps-5.7.26
         environment:
             - MYSQL_DATABASE=${DB_DATABASE}
@@ -137,34 +122,8 @@ services:
                 ipv4_address: 172.28.1.36
         restart: always
 
-    ### Mongodb
-    mongo:
-        ## 在virtualbox 的同步目录上， mongodb 不能创建db文件
-        ## refer https://github.com/docker-library/mongo/issues/74
-        ## https://docs.mongodb.com/manual/administration/production-notes/#fsync-on-directories
-        ## 为了保证权限及正常运行 需要在主机上(当前用户)新增目录 mkdir -p /home/vagrant/data/mongo 挂载到容器内部
-        ## 容器内部数据保存目录为 /data/db 日志目录为 /var/log/mongo
-        ## mongodb 设置用户和密码请参考 https://docs.mongodb.com/manual/reference/method/db.createUser/#db.createUser
-        ## https://github.com/docker-library/docs/tree/master/mongo
-        ## db.createUser({user:'admin',pwd:'123456',roles:[{role:"userAdminAnyDatabase",db:"admin"}]})
-        build:
-            context: ./build/mongo/${MONGODB_VERSION}
-            args:
-               - DEVBOX_UID=${DEVBOX_UID}
-               - DEVBOX_GID=${DEVBOX_GID}
-        volumes:
-            - ./data/mongo:/data/db
-            - ./log/mongo:/var/log/mongo
-            - ../dump:/var/mongo-dump
-        ports:
-            - "27017:27017"
-        networks:
-            devbox:
-                ipv4_address: 172.28.1.5
-        restart: always
-
-    ## mongodb-4.2
-    mongodb-4.2:
+    ## mongodb
+    mongodb:
         image: mongo:4.2.0-bionic
         ports:
             - "27018:27017"
@@ -172,17 +131,6 @@ services:
             devbox:
                 ipv4_address: 172.28.11.5
         restart: always
-
-    ### emscripten
-    emscripten:
-        ## for webassembly
-        ## https://hub.docker.com/r/trzeci/emscripten/
-        ## https://github.com/asRIA/emscripten-docker
-
-        image: trzeci/emscripten
-        volumes_from:
-            - "data-volume"
-        command: tail -f /etc/hosts
 
     ### Memcached
     memcached:
@@ -204,13 +152,7 @@ services:
             devbox:
                 ipv4_address: 172.28.1.7
         restart: always
-    ### 数据卷
-    data-volume:
-        image: tianon/true
-        volumes:
-            - /home/vagrant/projects:/project
-            - ./log:/var/log
-            - ./data:/var/data
+
     ### sshtunnel
     sshtunnel:
         image: baykier/sshtunnel
@@ -307,6 +249,14 @@ services:
                     ipv4_address: 172.28.6.35
         depends_on:
             - elasticsearch
+
+    ### 数据卷
+    data-volume:
+        image: tianon/true
+        volumes:
+            - /home/vagrant/projects:/project
+            - ./log:/var/log
+            - ./data:/var/data
 
 networks:
     default:
