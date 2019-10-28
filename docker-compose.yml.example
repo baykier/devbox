@@ -212,6 +212,11 @@ services:
         environment:
             ES_JAVA_OPTS: "-Xmx256m -Xms256m"
             ELASTIC_PASSWORD: devbox
+        logging:
+            driver: "json-file"
+            options:
+                max-size: "200k"
+                max-file: "10"
         networks:
             devbox:
                 ipv4_address: 172.28.6.33
@@ -229,6 +234,11 @@ services:
             - "9600:9600"
         environment:
             LS_JAVA_OPTS: "-Xmx256m -Xms256m"
+        logging:
+            driver: "json-file"
+            options:
+                max-size: "200k"
+                max-file: "10"
         networks:
             devbox:
                     ipv4_address: 172.28.6.34
