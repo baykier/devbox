@@ -125,6 +125,18 @@ RUN set -x \
 	&& apk del .phpize-deps \
     && docker-php-source delete
 
+## mongodb 扩展
+ENV MONGODB_VERSION 1.6.1
+RUN set -x \
+    && apk add --no-cache --virtual .phpize-deps \
+                                    ${PHPIZE_DEPS} \
+    && wget -O /tmp/mongodb-${MONGODB_VERSION}.tgz  https://pecl.php.net/get/mongodb-${MONGODB_VERSION}.tgz \
+    && pecl install /tmp/mongodb-${MONGODB_VERSION}.tgz \
+    && docker-php-ext-enable mongodb \
+    && apk del .phpize-deps \
+    && rm -fr /tmp/mongodb-${MONGODB_VERSION}.tgz
+
+
 
 ## 设置工作目录
 ENV WORKDIR_SPACE /project
