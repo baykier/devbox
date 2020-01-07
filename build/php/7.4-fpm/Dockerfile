@@ -77,6 +77,7 @@ RUN set -x \
     && docker-php-source delete
 
 ## 安装gd扩展
+
 RUN set -x \
     && apk add 	--no-cache  freetype \
                			    libpng \
@@ -84,11 +85,10 @@ RUN set -x \
                			    freetype-dev \
                			    libpng-dev \
                			    libjpeg-turbo-dev \
+    ## https://github.com/docker-library/php/issues/912
     && docker-php-ext-configure     gd \
-               			           # --with-gd \
-               			           # --with-freetype-dir=/usr/include \
-               			           # --with-png-dir=/usr/include \
-               			           # --with-jpeg-dir=/usr/include \
+               			           --with-freetype \
+               			           --with-jpeg \
     && docker-php-ext-install gd \
     && docker-php-source delete
 
