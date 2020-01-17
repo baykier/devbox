@@ -58,7 +58,8 @@ RUN set -x \
     && docker-php-source extract \
     && docker-php-ext-install   pdo_mysql \
                                 bcmath \
-                                exif \
+                                exif  \
+                                pcntl \
     && docker-php-source delete
 
 ## 安装zip扩展
@@ -140,7 +141,14 @@ RUN set -x \
     && apk del .phpize-deps \
     && rm -fr /tmp/mongodb-${MONGODB_VERSION}.tgz
 
+## composer
 
+ENV COMPOSER_VERSION 1.9.2
+
+RUN set -x \
+    && wget -O /usr/bin/composer-${COMPOSER_VERSION}.phar  https://getcomposer.org/download/${COMPOSER_VERSION}/composer.phar \
+    && chmod +x /usr/bin/composer-${COMPOSER_VERSION}.phar \
+    && ln -s  /usr/bin/composer-${COMPOSER_VERSION}.phar /usr/bin/composer
 
 ## 设置工作目录
 ENV WORKDIR_SPACE /project
