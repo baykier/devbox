@@ -235,6 +235,25 @@ services:
             devbox:
                 ipv4_address: 172.28.6.36
         restart: always
+    ## frp server
+    frp-server:
+        image: baykier:frp
+        volumes:
+            - ./conf/frp:/etc/frp
+
+        environment:
+            - FRP_BIND_DOMAIN=xx.x.com
+            - FRP_VHOST_HTTP_PORT=8080
+
+        ports:
+            - "8080:8080"
+        command:
+            frps -c /etc/frp/frps.ini
+
+        networks:
+            devbox:
+                ipv4_address: 172.28.11.2
+        restart: always
     ### 数据卷
     data-volume:
         image: tianon/true
