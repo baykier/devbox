@@ -14,7 +14,7 @@ COPY  ./plugins/* /tmp/
 COPY ./version-${ELK_VERSION} /tmp/version
 
 RUN set -ex && \
-    export ELK_VERSION=$(cat/tmp/version) && \
+    export ELK_VERSION=7.4.0 && \
     chown -R elasticsearch:elasticsearch /tmp/elasticsearch-analysis-ik-${ELK_VERSION}.zip && \
     chmod 755 /tmp/elasticsearch-analysis-ik-${ELK_VERSION}.zip && \
     elasticsearch-plugin install -b file:///tmp/elasticsearch-analysis-ik-${ELK_VERSION}.zip
