@@ -1,7 +1,8 @@
 ARG ELK_VERSION="7.4.0"
 
 # https://github.com/elastic/elasticsearch-docker
-# FROM elasticsearch:${ELK_VERSION}
+FROM elasticsearch:${ELK_VERSION}
+
 
 ENV ELK_VERSION "7.4.0"
 
