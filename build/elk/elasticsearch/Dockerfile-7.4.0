@@ -1,0 +1,20 @@
+ARG ELK_VERSION="7.4.0"
+
+# https://github.com/elastic/elasticsearch-docker
+FROM elasticsearch:${ELK_VERSION}
+
+
+ENV ELK_VERSION "7.4.0"
+
+
+# Add your elasticsearch plugins setup here
+# Example: RUN elasticsearch-plugin install analysis-icu
+
+COPY  ./plugins/* /tmp/
+COPY ./version-${ELK_VERSION} /tmp/version
+
+RUN set -ex && \
+    export ELK_VERSION=7.4.0 && \
+    chown -R elasticsearch:elasticsearch /tmp/elasticsearch-analysis-ik-${ELK_VERSION}.zip && \
+    chmod 755 /tmp/elasticsearch-analysis-ik-${ELK_VERSION}.zip && \
+    elasticsearch-plugin install -b file:///tmp/elasticsearch-analysis-ik-${ELK_VERSION}.zip

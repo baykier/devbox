@@ -9,5 +9,5 @@ FROM elasticsearch:${ELK_VERSION}
 COPY --chown=elasticsearch:elasticsearch ./plugins/* /tmp/
 
 RUN set -ex && \
-    chmod 755 /tmp/elasticsearch-analysis-ik-6.7.2.zip && \
-    elasticsearch-plugin install -b file:///tmp/elasticsearch-analysis-ik-6.7.2.zip
+    chmod 755 /tmp/elasticsearch-analysis-ik-${ELK_VERSION}.zip && \
+    elasticsearch-plugin install -b file:///tmp/elasticsearch-analysis-ik-${ELK_VERSION}.zip
