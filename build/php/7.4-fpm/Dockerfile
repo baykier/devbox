@@ -141,6 +141,27 @@ RUN set -x \
     && apk del .phpize-deps \
     && rm -fr /tmp/mongodb-${MONGODB_VERSION}.tgz
 
+## tideways 扩展
+## refer https://github.com/tideways/php-xhprof-extension
+ENV TIDEWAYS_VERSION "5.0.2"
+
+RUN set -ex \
+    ## 安装tideways-php-ext
+    && apk add --no-cache --virtual .phpize-deps    \
+                                    ${PHPIZE_DEPS}  \
+    && wget -O /tmp/tideways-php-${TIDEWAYS_VERSION}.tar.gz https://github.com/tideways/php-xhprof-extension/archive/v${TIDEWAYS_VERSION}.tar.gz \
+    && mkdir -p /tmp/tideways-php-${TIDEWAYS_VERSION}-src \
+    && tar -xf /tmp/tideways-php-${TIDEWAYS_VERSION}.tar.gz -C /tmp/tideways-php-${TIDEWAYS_VERSION}-src --strip-components=1 \
+    && ( \
+        cd /tmp/tideways-php-${TIDEWAYS_VERSION}-src \
+        && phpize \
+        &&  ./configure \
+        && make install \
+    ) \
+    && docker-php-ext-enable tideways_xhprof \
+    && rm -fr /tmp/* \
+    && apk del .phpize-deps
+
 ## composer
 
 ENV COMPOSER_VERSION 1.9.2
@@ -158,9 +179,12 @@ RUN set -ex \
 
 #配置文件
 COPY ./php.ini-dev ${PHP_INI_DIR}/php.ini
-#COPY ./php-ext.conf.d/* ${PHP_INI_DIR}/conf.d/
 COPY ./php-fpm.d/* ${PHP_INI_DIR}/php-fpm.d/
 COPY ./php-fpm.conf /usr/local/etc/php-fpm.conf
+COPY conf.d/*.ini ${PHP_INI_DIR}/conf.d/
+
+RUN set -ex \
+    && ls -alF ${PHP_INI_DIR}/conf.d/
 
 
 WORKDIR ${WORKDIR_SPACE}
