@@ -181,10 +181,8 @@ RUN set -ex \
 COPY ./php.ini-dev ${PHP_INI_DIR}/php.ini
 COPY ./php-fpm.d/* ${PHP_INI_DIR}/php-fpm.d/
 COPY ./php-fpm.conf /usr/local/etc/php-fpm.conf
-COPY conf.d/*.ini ${PHP_INI_DIR}/conf.d/
+# COPY conf.d/*.ini ${PHP_INI_DIR}/conf.d/
 
-RUN set -ex \
-    && ls -alF ${PHP_INI_DIR}/conf.d/
 
 
 WORKDIR ${WORKDIR_SPACE}
