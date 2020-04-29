@@ -1,0 +1,15 @@
+{
+    "listen": ":8379", 
+    "target": "YOUR_SERVER_IP:8380", 
+    "key": "very fast",
+    "crypt": "aes-128",
+    "mode": "fast",
+    "mtu": 1350,
+    "sndwnd": 512,
+    "rcvwnd": 512,
+    "datashard": 10,
+    "parityshard": 3,
+    "dscp": 0,
+    "nocomp": false,
+    "pprof": false
+  }
