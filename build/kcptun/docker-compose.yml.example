@@ -1,15 +1,30 @@
 version: "2.1"
 services:
     ## kcptun server
-    server:
-        build:
-            context: ./
-            args:
-                - KCPTUN_VERSION=20200409
-        volumes:
-            - ./server_config.json:/opt/kcptun/server_config.json
-
+    kcp-server:
+        image: baykier/kcptun
+        environment:
+            - KCPTUN_KEY=test
+            - KCPTUN_TARGET=ss-server:8388
+            - KCPTUN_CRYPT=aes-128
+            - KCPTUN_MODE=fast2
+        links:
+            - ss-server
+        ports:
+            - "2990:2990/tcp"
+            - "2990:2990/udp"
         restart: always
+    ## shadwosock server 
+    ss-server:
+        image: easypi/shadowsocks-libev:3.3.2
+        ports:
+            - "5230:8388/tcp"
+            - "5230:8388/udp"
+        environment:
+            - METHOD=aes-256-gcm
+            - PASSWORD=key  
+        restart: always
+
 
 
 

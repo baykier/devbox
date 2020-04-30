@@ -19,7 +19,16 @@ RUN set -ex \
     && curl -sSL $KCPTUN_URL | tar xz \
     && apk del TMP
 
-COPY server_config.json $KCPTUN_HOME
+ENV KCPTUN_TARGET ""
+ENV KCPTUN_KEY "key"
+ENV KCPTUN_CRYPY "aes-128"
+ENV KCPTUN_MODE "fast2"
+
+EXPOSE 2990
 
 
- CMD ["/opt/kcptun/server_linux_amd64","-c","/opt/kcptun/server_config.json"]
+ CMD /opt/kcptun/server_linux_amd64 --listen "0.0.0.0:2990" \
+                                    --target $KCPTUN_TARGET \
+                                    --key    $KCPTUN_KEY \
+                                    --crypt  $KCPTUN_CRYPY \
+                                    --mode   $KCPTUN_MODE
