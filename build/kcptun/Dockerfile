@@ -11,20 +11,15 @@ ARG KCPTUN_VERSION="20200409"
 ENV KCPTUN_URL https://github.com/xtaci/kcptun/releases/download/v${KCPTUN_VERSION}/kcptun-linux-amd64-${KCPTUN_VERSION}.tar.gz
 ENV KCPTUN_HOME "/opt/kcptun"
 
-# install kcptun 
+# install kcptun
 RUN set -ex \
     && apk add --no-cache  --virtual TMP curl tar \
     && mkdir -p ${KCPTUN_HOME} \
     && cd ${KCPTUN_HOME} \
     && curl -sSL $KCPTUN_URL | tar xz \
-    && apk del TMP 
-
-# set env 
-RUN set -ex \
-    && export PATH=$PATH:$KCPTUN_HOME \
-    && ln -s ${KCPTUN_HOME}/server_linux_amd64 ${KCPTUN_HOME}/kcptun_server    
+    && apk del TMP
 
 COPY server_config.json $KCPTUN_HOME
 
 
- CMD ["kcptun_server","-c","$KCPTUN_HOME/server_config.json"]
+ CMD ["/opt/kcptun/server_linux_amd64","-c","/opt/kcptun/server_config.json"]

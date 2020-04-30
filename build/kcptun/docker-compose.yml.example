@@ -1,0 +1,24 @@
+version: "2.1"
+services:
+    ## kcptun server
+    server:
+        build:
+            context: ./
+            args:
+                - KCPTUN_VERSION=20200409
+        volumes:
+            - ./server_config.json:/opt/kcptun/server_config.json
+
+        restart: always
+
+
+
+
+
+
+
+
+
+
+
+
