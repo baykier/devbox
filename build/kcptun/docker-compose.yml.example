@@ -4,10 +4,10 @@ services:
     kcp-server:
         image: baykier/kcptun
         environment:
-            - KCPTUN_KEY=test
-            - KCPTUN_TARGET=ss-server:8388
-            - KCPTUN_CRYPT=aes-128
-            - KCPTUN_MODE=fast2
+            - KCP_KEY=test
+            - KCP_TARGET=ss-server:8388
+            - KCP_CRYPT=aes-128
+            - KCP_MODE=fast2
         links:
             - ss-server
         ports:
