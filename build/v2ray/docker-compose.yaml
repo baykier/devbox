@@ -1,7 +1,7 @@
 version: "2.1"
 services:
   v2ray:
-    image: v2ray/official
+    image: v2ray/official:4.23.1
     volumes:
        - ./v2ray:/etc/v2ray
     ports:
