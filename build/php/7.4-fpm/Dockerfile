@@ -123,7 +123,6 @@ RUN set -x \
 							openssl-dev \
 	&& apk add --no-cache --virtual .phpize-deps \
                                     ${PHPIZE_DEPS} \
-
     ## 修复openssl not found 错误  https://github.com/docker-library/php/issues/891#issuecomment-531023107
 	&& PHP_OPENSSL=yes docker-php-ext-configure imap --with-imap --with-imap-ssl \
 	&& docker-php-ext-install imap \
@@ -162,9 +161,44 @@ RUN set -ex \
     && rm -fr /tmp/* \
     && apk del .phpize-deps
 
+## msgpack
+## refer  https://pecl.php.net/package/msgpack
+
+ENV MSGPACK_VERSION "2.1.1"
+RUN set -ex \
+    && apk add --no-cache --virtual .phpize-deps    \
+                                    ${PHPIZE_DEPS}  \
+    && wget -O /tmp/msgpack-${MSGPACK_VERSION}.tgz  https://pecl.php.net/get/msgpack-${MSGPACK_VERSION}.tgz \
+    && pecl install /tmp/msgpack-${MSGPACK_VERSION}.tgz \
+    && docker-php-ext-enable msgpack \
+    && rm -fr /tmp/* \
+    && apk del .phpize-deps
+
+## yar
+## refer https://pecl.php.net/package/yar
+ENV YAR_VERSION "2.1.2"
+RUN set -ex \
+    && apk add --no-cache curl-dev \
+    && apk add --no-cache --virtual .phpize-deps    \
+                                    ${PHPIZE_DEPS}  \
+    && wget -O /tmp/yar-${YAR_VERSION}.tgz  https://pecl.php.net/get/yar-${YAR_VERSION}.tgz \
+    && mkdir -p /tmp/yar-${YAR_VERSION}-src \
+    && tar -xf  /tmp/yar-${YAR_VERSION}.tgz -C /tmp/yar-${YAR_VERSION}-src --strip-components=1 \
+    && ( \
+        cd /tmp/yar-${YAR_VERSION}-src \
+        && phpize \
+        && ./configure  \
+                        ## 使用 msgpack
+                        --enable-msgpack \
+        && make install \
+    ) \
+    && docker-php-ext-enable yar \
+    && rm -fr /tmp/* \
+    && apk del .phpize-deps
+
 ## composer
 
-ENV COMPOSER_VERSION 1.9.2
+ENV COMPOSER_VERSION 1.10.10
 
 RUN set -x \
     && wget -O /usr/bin/composer-${COMPOSER_VERSION}.phar  https://getcomposer.org/download/${COMPOSER_VERSION}/composer.phar \
