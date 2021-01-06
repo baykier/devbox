@@ -25,22 +25,7 @@ class Timer(object):
             localtime.tm_year.__str__() + '-' + localtime.tm_mon.__str__() + '-' + localtime.tm_mday.__str__() + ' ' + buy_time_everyday,
             "%Y-%m-%d %H:%M:%S.%f")
 
-        if time.mktime(localtime) < time.mktime(buy_time_config.timetuple()):
-            # 取正确的购买时间
-            self.buy_time = buy_time_config
-        # elif time.mktime(localtime) > time.mktime(last_purchase_time.timetuple()):
-        #     # 取明天的时间 购买时间
-        #     self.buy_time = datetime.strptime(
-        #         localtime.tm_year.__str__() + '-' + localtime.tm_mon.__str__() + '-' + (
-        #                 localtime.tm_mday + 1).__str__() + ' ' + buy_time_everyday,
-        #         "%Y-%m-%d %H:%M:%S.%f")
-        else:
-            self.buy_time = datetime.strptime(
-                localtime.tm_year.__str__() + '-' + localtime.tm_mon.__str__() + '-' + (
-                        localtime.tm_mday + 1).__str__() + ' ' + buy_time_everyday,
-                "%Y-%m-%d %H:%M:%S.%f")
-
-        # self.buy_time = buy_time_config
+        self.buy_time = buy_time_config
         print("购买时间：{}".format(self.buy_time))
 
         self.buy_time_ms = int(time.mktime(self.buy_time.timetuple()) * 1000.0 + self.buy_time.microsecond / 1000)
