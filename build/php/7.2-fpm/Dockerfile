@@ -1,209 +1,159 @@
-######################################################################################################################
-##                                 Dockerfile for php:7.2-fpm
+########################################################################################################################
+##                                      Dockerfile for baykier/php:7.2-fpm
 ##
-## 参考官方镜像 在此基础上替换alpine:edge 替换源码包为国内镜像源，加入 --enable-sockets参数支持sockets
-## https://github.com/docker-library/php/blob/6afe1891039011a7562bd40c5a955f955e52510a/7.2/alpine3.7/fpm/Dockerfile
-FROM baykier/alpine:edge
+
+FROM php:7.2-fpm-alpine
 
 MAINTAINER baykier 1035666345@qq.com
 
-# persistent / runtime deps
-ENV PHPIZE_DEPS \
-		autoconf \
-		dpkg-dev dpkg \
-		file \
-		g++ \
-		gcc \
-		libc-dev \
-		make \
-		pkgconf \
-		re2c
-RUN apk add --no-cache --virtual .persistent-deps \
-		ca-certificates \
-		curl \
-		tar \
-		xz \
-# https://github.com/docker-library/php/issues/494
-		libressl
+RUN set -ex \
+    ## 使用阿里源
+    && sed -i 's/dl-cdn.alpinelinux.org/mirrors.aliyun.com/g' /etc/apk/repositories \
+    && apk update \
+    && apk add ca-certificates git
 
-# ensure www-data user exists
+## 安装 gosu 解决权限问题仅用于开发环境
+## homepage https://github.com/tianon/gosu
+
+ENV GOSU_VERSION 1.10
 RUN set -x \
-	&& addgroup -g 82 -S www-data \
-	&& adduser -u 82 -D -S -G www-data www-data
-# 82 is the standard uid/gid for "www-data" in Alpine
-# http://git.alpinelinux.org/cgit/aports/tree/main/apache2/apache2.pre-install?h=v3.3.2
-# http://git.alpinelinux.org/cgit/aports/tree/main/lighttpd/lighttpd.pre-install?h=v3.3.2
-# http://git.alpinelinux.org/cgit/aports/tree/main/nginx-initscripts/nginx-initscripts.pre-install?h=v3.3.2
+	&& apk add --no-cache --virtual .gosu-deps \
+		                                dpkg \
+		                                gnupg \
+		                               # openssl1.0 \
+	&& dpkgArch="$(dpkg --print-architecture | awk -F- '{ print $NF }')"  \
+	&& wget -O /usr/local/bin/gosu "https://github.com/tianon/gosu/releases/download/$GOSU_VERSION/gosu-$dpkgArch"  \
+	&& wget -O /usr/local/bin/gosu.asc "https://github.com/tianon/gosu/releases/download/$GOSU_VERSION/gosu-$dpkgArch.asc" \
+	&& chmod +x /usr/local/bin/gosu \
+    # verify that the binary works
+	&& gosu nobody true \
+	&& apk del .gosu-deps
 
-ENV PHP_INI_DIR /usr/local/etc/php
-RUN mkdir -p $PHP_INI_DIR/conf.d
+## git
+RUN set -ex \
+    && apk update \
+    && apk add ca-certificates git
 
-ENV PHP_EXTRA_CONFIGURE_ARGS --enable-fpm --with-fpm-user=www-data --with-fpm-group=www-data
+## 安装php扩展
+## php:7.2 docker默认安装的扩展
+## { Core ctype curl date dom fileinfo filter ftp hash iconv json libxml mbstring mysqlnd openssl pcre PDO
+## pdo_sqlite Phar posix readline Reflection session SimpleXML SPL sqlite3 standard tokenizer xml xmlreader
+## xmlwriter zlib }
+##
 
-# Apply stack smash protection to functions using local buffers and alloca()
-# Make PHP's main executable position-independent (improves ASLR security mechanism, and has no performance impact on x86_64)
-# Enable optimization (-O2)
-# Enable linker optimization (this sorts the hash buckets to improve cache locality, and is non-default)
-# Adds GNU HASH segments to generated executables (this is used if present, and is much faster than sysv hash; in this configuration, sysv hash is also generated)
-# https://github.com/docker-library/php/issues/272
-ENV PHP_CFLAGS="-fstack-protector-strong -fpic -fpie -O2"
-ENV PHP_CPPFLAGS="$PHP_CFLAGS"
-ENV PHP_LDFLAGS="-Wl,-O1 -Wl,--hash-style=both -pie"
+## 安装mysql 扩展
+RUN set -x \
+    && docker-php-source extract \
+    && docker-php-ext-install pdo_mysql \
+    && docker-php-source delete
 
-ENV GPG_KEYS 1729F83938DA44E27BA0F4D3DBDB397470D12172 B1B44D8F021E4E2D6021E995DC9FF8D3EE5AF27F
+## 安装bcmath 扩展
+RUN set -x \
+    && docker-php-source extract \
+    && docker-php-ext-install bcmath \
+    && docker-php-source delete
 
-ENV PHP_VERSION 7.2.19
-## 换成国内镜像
-## https://www.php.net/distributions/php-7.2.19.tar.xz
-ENV PHP_URL https://www.php.net/distributions/php-${PHP_VERSION}.tar.xz/from/this/mirror
-ENV PHP_ASC_URL https://www.php.net/distributions/php-${PHP_VERSION}.tar.xz.asc/from/this/mirror
-ENV PHP_SHA256 "4ffa2404a88d60e993a9fe69f829ebec3eb1e006de41b6048ce5e91bbeaa9282"
-ENV PHP_MD5 ""
+## 安装zip扩展
+RUN set -x \
+    && apk add --no-cache zlib-dev \
+    && docker-php-ext-configure zip \
+    && docker-php-ext-install zip \
+    && docker-php-source delete
 
-RUN set -xe; \
-	\
-	apk add --no-cache --virtual .fetch-deps \
-		gnupg \
-	; \
-	\
-	mkdir -p /usr/src; \
-	cd /usr/src; \
-	\
-	wget -O php.tar.xz "$PHP_URL"; \
-	ls -alF ;\
-	\
-	if [ -n "$PHP_SHA256" ]; then \
-		echo "$PHP_SHA256  *php.tar.xz" | sha256sum -c -; \
-	fi; \
-	if [ -n "$PHP_MD5" ]; then \
-		echo "$PHP_MD5 *php.tar.xz" | md5sum -c -; \
-	fi; \
-	\
-	if [ -n "$PHP_ASC_URL" ]; then \
-		wget -O php.tar.xz.asc "$PHP_ASC_URL"; \
-		export GNUPGHOME="$(mktemp -d)"; \
-		for key in $GPG_KEYS; do \
-			gpg --keyserver ha.pool.sks-keyservers.net --recv-keys "$key"; \
-		done; \
-		gpg --batch --verify php.tar.xz.asc php.tar.xz; \
-		rm -rf "$GNUPGHOME"; \
-	fi; \
-	\
-	apk del .fetch-deps
+## 安装exif扩展
+RUN set -x \
+    && docker-php-source extract \
+    && docker-php-ext-install exif \
+    && docker-php-source delete
 
-COPY docker-php-* /usr/local/bin/
+## 安装intl扩展
+RUN set -x \
+    && apk add --no-cache icu-dev \
+    && docker-php-ext-configure intl \
+    && docker-php-ext-install intl \
+    && docker-php-source delete
 
-RUN set -xe \
-	&& apk add --no-cache --update --virtual .build-deps \
-		$PHPIZE_DEPS \
-		coreutils \
-		curl-dev \
-		libedit-dev \
-		libressl-dev \
-		libxml2-dev \
-		sqlite-dev \
-	\
-	&& export CFLAGS="$PHP_CFLAGS" \
-		CPPFLAGS="$PHP_CPPFLAGS" \
-		LDFLAGS="$PHP_LDFLAGS" \
-	## 添加可执行权限
-    ## fixed for aliyun servers
-    && chmod +x /usr/local/bin/docker-php-* \
-    ## use sync to avoid text file busy bugs
-    ## https://github.com/moby/moby/issues/9547
-    && sync \
-	&& docker-php-source extract \
-	&& cd /usr/src/php \
-	&& gnuArch="$(dpkg-architecture --query DEB_BUILD_GNU_TYPE)" \
-	&& ./configure \
-		--build="$gnuArch" \
-		--with-config-file-path="$PHP_INI_DIR" \
-		--with-config-file-scan-dir="$PHP_INI_DIR/conf.d" \
-		\
-		--disable-cgi \
-		\
-# --enable-ftp is included here because ftp_ssl_connect() needs ftp to be compiled statically (see https://github.com/docker-library/php/issues/236)
-		--enable-ftp \
-# --enable-mbstring is included here because otherwise there's no way to get pecl to use it properly (see https://github.com/docker-library/php/issues/195)
-		--enable-mbstring \
-# --enable-mysqlnd is included here because it's harder to compile after the fact than extensions are (since it's a plugin for several extensions, not an extension in itself)
-		--enable-mysqlnd \
-		\
-		--with-curl \
-		--with-libedit \
-		--with-openssl \
-		--with-zlib \
-# --enable-sockets 允许sockets
-# http://php.net/manual/en/sockets.installation.php
-		--enable-sockets \
-		\
-# bundled pcre does not support JIT on s390x
-# https://manpages.debian.org/stretch/libpcre3-dev/pcrejit.3.en.html#AVAILABILITY_OF_JIT_SUPPORT
-		$(test "$gnuArch" = 's390x-linux-gnu' && echo '--without-pcre-jit') \
-		\
-		$PHP_EXTRA_CONFIGURE_ARGS \
-	&& make -j "$(nproc)" \
-	&& make install \
-	&& { find /usr/local/bin /usr/local/sbin -type f -perm +0111 -exec strip --strip-all '{}' + || true; } \
-	&& make clean \
-	&& cd / \
-	&& docker-php-source delete \
-	\
-	&& runDeps="$( \
-		scanelf --needed --nobanner --format '%n#p' --recursive /usr/local \
-			| tr ',' '\n' \
-			| sort -u \
-			| awk 'system("[ -e /usr/local/lib/" $1 " ]") == 0 { next } { print "so:" $1 }' \
-	)" \
-	&& apk add --no-cache --virtual .php-rundeps $runDeps \
-	\
-	&& apk del .build-deps \
-	\
-# https://github.com/docker-library/php/issues/443
-	&& pecl update-channels \
-	&& rm -rf /tmp/pear ~/.pearrc
+## 安装gd扩展
+RUN set -x \
+    && apk add 	--no-cache  freetype \
+               			    libpng \
+               			    libjpeg-turbo \
+               			    freetype-dev \
+               			    libpng-dev \
+               			    libjpeg-turbo-dev \
+    && docker-php-ext-configure     gd \
+               			            --with-gd \
+               			            --with-freetype-dir=/usr/include \
+               			            --with-png-dir=/usr/include \
+               			            --with-jpeg-dir=/usr/include \
+    && docker-php-ext-install gd \
+    && docker-php-source delete
 
-WORKDIR /var/www/html
+## 安装imagick
+ENV IMAGICK_VERSION 3.4.3
+RUN set -x \
+    && apk add --no-cache --virtual .phpize-deps \
+                                    ${PHPIZE_DEPS} \
+    && apk add --no-cache imagemagick-dev \
+    && wget -O /tmp/imagick-${IMAGICK_VERSION}.tgz http://pecl.php.net/get/imagick-${IMAGICK_VERSION}.tgz \
+    && pecl install /tmp/imagick-${IMAGICK_VERSION}.tgz \
+    && docker-php-ext-enable imagick \
+    && apk del .phpize-deps \
+    && rm -fr /tmp/imagick-${IMAGICK_VERSION}.tgz
+
+## 安装redis扩展
+ENV REDIS_VERSION 3.1.5
+RUN set -x \
+    && apk add --no-cache --virtual .phpize-deps \
+                                    ${PHPIZE_DEPS} \
+    && wget -O /tmp/redis-${REDIS_VERSION}.tgz http://pecl.php.net/get/redis-${REDIS_VERSION}.tgz \
+    && pecl install /tmp/redis-${REDIS_VERSION}.tgz \
+    && docker-php-ext-enable redis \
+    && apk del .phpize-deps \
+    && rm -fr /tmp/redis-${REDIS_VERSION}.tgz
+
+## 安装mongodb扩展
+ENV MONGODB_VERSION 1.5.2
+RUN set -x \
+    && apk add --no-cache --virtual .phpize-deps \
+                                    ${PHPIZE_DEPS} \
+    && wget -O /tmp/mongodb-${MONGODB_VERSION}.tgz http://pecl.php.net/get/mongodb-${MONGODB_VERSION}.tgz \
+    && pecl install /tmp/mongodb-${MONGODB_VERSION}.tgz \
+    && docker-php-ext-enable mongodb \
+    && apk del .phpize-deps \
+    && rm -fr /tmp/mongodb-${MONGODB_VERSION}.tgz
+
+## 安装memcached扩展
+ENV MEMCACHED_VERSION 3.0.4
+RUN set -x \
+    && apk add --no-cache --virtual .phpize-deps \
+                                    ${PHPIZE_DEPS} \
+    && apk add --no-cache  	libmemcached-dev \
+                            cyrus-sasl-dev \
+    && wget -O /tmp/memcached-${MEMCACHED_VERSION}.tgz http://pecl.php.net/get/memcached-${MEMCACHED_VERSION}.tgz \
+    && pecl install /tmp/memcached-${MEMCACHED_VERSION}.tgz \
+    && docker-php-ext-enable memcached \
+    && apk del .phpize-deps \
+    && rm -fr /tmp/memcached-${MEMCACHED_VERSION}.tgz
+
+
+## 配置文件
+COPY ./php.ini-dev ${PHP_INI_DIR}/php.ini
+COPY ./php-ext.conf.d/* ${PHP_INI_DIR}/conf.d/
+COPY ./php-fpm.d/* ${PHP_INI_DIR}/php-fpm.d/
+COPY ./php-fpm.conf /usr/local/etc/php-fpm.conf
+
+## 设置工作目录
+ENV WORKDIR_SPACE /project
 
 RUN set -ex \
-	&& cd /usr/local/etc \
-	&& if [ -d php-fpm.d ]; then \
-		# for some reason, upstream's php-fpm.conf.default has "include=NONE/etc/php-fpm.d/*.conf"
-		sed 's!=NONE/!=!g' php-fpm.conf.default | tee php-fpm.conf > /dev/null; \
-		cp php-fpm.d/www.conf.default php-fpm.d/www.conf; \
-	else \
-		# PHP 5.x doesn't use "include=" by default, so we'll create our own simple config that mimics PHP 7+ for consistency
-		mkdir php-fpm.d; \
-		cp php-fpm.conf.default php-fpm.d/www.conf; \
-		{ \
-			echo '[global]'; \
-			echo 'include=etc/php-fpm.d/*.conf'; \
-		} | tee php-fpm.conf; \
-	fi \
-	&& { \
-		echo '[global]'; \
-		echo 'error_log = /proc/self/fd/2'; \
-		echo; \
-		echo '[www]'; \
-		echo '; if we send this to /proc/self/fd/1, it never appears'; \
-		echo 'access.log = /proc/self/fd/2'; \
-		echo; \
-		echo 'clear_env = no'; \
-		echo; \
-		echo '; Ensure worker stdout and stderr are sent to the main error log.'; \
-		echo 'catch_workers_output = yes'; \
-	} | tee php-fpm.d/docker.conf \
-	&& { \
-		echo '[global]'; \
-		echo 'daemonize = no'; \
-		echo; \
-		echo '[www]'; \
-		echo 'listen = [::]:9000'; \
-	} | tee php-fpm.d/zz-docker.conf
+    && mkdir -p ${WORKDIR_SPACE} /var/log/php
+
+
+WORKDIR ${WORKDIR_SPACE}
+
+VOLUME ${WORKDIR_SPACE}
 
 EXPOSE 9000
 
-ENTRYPOINT ["docker-php-entrypoint"]
-
-CMD ["php-fpm"]
-
+ENTRYPOINT gosu root php-fpm
