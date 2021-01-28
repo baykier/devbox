@@ -139,7 +139,6 @@ RUN set -x \
 
 ## 配置文件
 COPY ./php.ini-dev ${PHP_INI_DIR}/php.ini
-COPY ./php-ext.conf.d/* ${PHP_INI_DIR}/conf.d/
 COPY ./php-fpm.d/* ${PHP_INI_DIR}/php-fpm.d/
 COPY ./php-fpm.conf /usr/local/etc/php-fpm.conf
 
