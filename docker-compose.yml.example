@@ -256,12 +256,7 @@ services:
             devbox:
                 ipv4_address: 172.28.11.2
         restart: always
-    ## jd_maotai_seckill
-    jd_maotai:
-        image: baykier/jd_maotai_seckill
-        volumes:
-            - conf/jd_maotai_seckill/config.ini:/app/config.ini
-            - log/jd_maotai_seckill/qr_code.png:/app/qr_code.png
+
     ### 数据卷
     data-volume:
         image: tianon/true
