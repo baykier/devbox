@@ -2,14 +2,14 @@
 ##                                      Dockerfile for baykier/php:8.0-fpm
 ##
 
-FROM php:8.0.0-fpm-alpine3.12
+FROM php:8.0-fpm-alpine3.13
 
-MAINTAINER baykier 1035666345@qq.com
+LABEL version="1.0"
+LABEL author="baykier 1035666345@qq.com"
 
 
 ##  git
 RUN set -ex \
-
     # 使用阿里源
     && sed -i 's/dl-cdn.alpinelinux.org/mirrors.aliyun.com/g' /etc/apk/repositories \
     && apk update \
@@ -48,7 +48,7 @@ RUN set -eux; \
 
 
 ## 安装php扩展
-## php:7.4 docker默认安装的扩展
+## php:8.0 docker默认安装的扩展
 ## { Core ctype curl date dom fileinfo filter ftp hash iconv json libxml mbstring mysqlnd openssl pcre PDO
 ## pdo_sqlite Phar posix readline Reflection session SimpleXML SPL sqlite3 standard tokenizer xml xmlreader
 ## xmlwriter zlib }
@@ -94,17 +94,21 @@ RUN set -x \
     && docker-php-ext-install gd \
     && docker-php-source delete
 
-## 安装imagick 8.0 暂未支持 https://github.com/Imagick/imagick/issues/271
-# ENV IMAGICK_VERSION 3.4.4
-# RUN set -x \
-#     && apk add --no-cache --virtual .phpize-deps \
-#                                     ${PHPIZE_DEPS} \
-#     && apk add --no-cache imagemagick-dev \
-#     && wget -O /tmp/imagick-${IMAGICK_VERSION}.tgz http://pecl.php.net/get/imagick-${IMAGICK_VERSION}.tgz \
-#     && pecl install /tmp/imagick-${IMAGICK_VERSION}.tgz \
-#     && docker-php-ext-enable imagick \
-#     && apk del .phpize-deps \
-#     && rm -fr /tmp/imagick-${IMAGICK_VERSION}.tgz
+## 安装imagick 8.0 https://github.com/Imagick/imagick/issues/358#issuecomment-737385312
+
+RUN set -ex \
+    && apk add --no-cache --virtual .phpize-deps \
+                                    ${PHPIZE_DEPS} \
+    && apk add --no-cache imagemagick-dev \
+    && cd /tmp/ \
+    && git clone https://github.com/Imagick/imagick \
+    && cd imagick \
+    && phpize && ./configure \
+    && make \
+    && make install \
+    && rm -fr /tmp/imagick \
+    && docker-php-ext-enable imagick \
+    && apk del .phpize-deps
 
 ## 安装redis扩展
 ENV REDIS_VERSION 5.3.2
@@ -133,7 +137,7 @@ ENV MONGODB_VERSION 1.9.0
 RUN set -x \
     && apk add --no-cache --virtual .phpize-deps \
                                     ${PHPIZE_DEPS} \
-    && wget -O /tmp/mongodb-${MONGODB_VERSION}.tgz  https://pecl.php.net/get/mongodb-${MONGODB_VERSION}.tgz \
+    && wget -O /tmp/mongodb-${MONGODB_VERSION}.tgz  http://pecl.php.net/get/mongodb-${MONGODB_VERSION}.tgz \
     && pecl install /tmp/mongodb-${MONGODB_VERSION}.tgz \
     && docker-php-ext-enable mongodb \
     && apk del .phpize-deps \
@@ -142,10 +146,10 @@ RUN set -x \
 
 ## composer
 
-ENV COMPOSER_VERSION 1.9.2
+ENV COMPOSER_VERSION 2.0.11
 
 RUN set -x \
-    && wget -O /usr/bin/composer-${COMPOSER_VERSION}.phar  https://getcomposer.org/download/${COMPOSER_VERSION}/composer.phar \
+    && wget -O /usr/bin/composer-${COMPOSER_VERSION}.phar  http://getcomposer.org/download/${COMPOSER_VERSION}/composer.phar \
     && chmod +x /usr/bin/composer-${COMPOSER_VERSION}.phar \
     && ln -s  /usr/bin/composer-${COMPOSER_VERSION}.phar /usr/bin/composer
 
@@ -159,7 +163,6 @@ RUN set -ex \
 COPY ./php.ini-dev ${PHP_INI_DIR}/php.ini
 COPY ./php-fpm.d/* ${PHP_INI_DIR}/php-fpm.d/
 COPY ./php-fpm.conf /usr/local/etc/php-fpm.conf
-# COPY conf.d/*.ini ${PHP_INI_DIR}/conf.d/
 
 
 
@@ -170,5 +173,6 @@ VOLUME ${WORKDIR_SPACE}
 EXPOSE 9000
 
 ENTRYPOINT gosu root php-fpm
+
 
 
