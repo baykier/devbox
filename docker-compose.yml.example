@@ -2,11 +2,10 @@ version: "2.1"
 services:
     ### nginx service
     nginx:
-        build:
-            context: ./build/nginx/${NGINX_VERSION}
-            args:
-                - DEVBOX_UID=${DEVBOX_UID}
-                - DEVBOX_GID=${DEVBOX_GID}
+        image: baykier/nginx:${NGINX_VERSION}
+        environment: 
+            - DEVBOX_UID=${DEVBOX_UID}
+            - DEVBOX_GID=${DEVBOX_GID}
         volumes_from:
             - "data-volume"
         volumes:
@@ -16,14 +15,14 @@ services:
             - "80:80"
             - "443:443"
         links:
-            - php-fpm-7.4
+            - php-fpm-7.4                                                        
         extra_hosts:
             # add extra hosts mapping for dev
-            - "devbox.dev:172.28.1.1"
+            - "dev.devbox.dev:172.28.1.1"
         networks:
             devbox:
                 ipv4_address: 172.28.1.1
-        restart: always
+        restart: always 
     ## php-fpm-5.6
     php-fpm-5.6:
         image: baykier/php:5.6-wl
@@ -32,14 +31,14 @@ services:
         volumes:
             - ./log/php/php-fpm-5.6:/var/log/php
         extra_hosts:
-            - "devbox.dev:172.28.1.1"
+            - "dev.devbox.dev:172.28.1.1"
         links:
-            - mysql
+            - mysql-5.7
             - mongodb
             - redis
         networks:
             devbox:
-                ipv4_address: 172.28.1.2
+                ipv4_address: 172.28.2.1
         restart: always
     ## php-fpm 7.4
     php-fpm-7.4:
@@ -49,32 +48,33 @@ services:
         volumes:
             - ./log/php/php-fpm-7.4:/var/log/php
         links:
-            - mysql
+            - mysql-5.7
             - redis
-            #- elasticsearch
+            #- xunsearch
         extra_hosts:
-            - "devbox.dev:172.28.1.1"
+            - "dev.devbox.dev:172.28.1.1"
         networks:
             devbox:
-                ipv4_address: 172.28.1.33
+                ipv4_address: 172.28.2.2
         restart: always
     ### mysql service
-    mysql:
-        image: percona:ps-5.7.26
-        user: root
+    mysql-5.7:
+        image: baykier/mysql:5.7
         environment:
+            - DEVBOX_UID=${DEVBOX_UID}
+            - DEVBOX_GID=${DEVBOX_GID}
             - MYSQL_DATABASE=${DB_DATABASE}
             - MYSQL_USER=${DB_USER}
             - MYSQL_PASSWORD=${DB_PASSWORD}
             - MYSQL_ROOT_PASSWORD=${DB_ROOT_PASSWORD}
         volumes:
             - ./data/mysql-5.7:/var/lib/mysql
-            - ./log/mysql5.7:/var/log/mysql
+            - ./log/mysql-5.7:/var/log/mysql
         ports:
             - "3306:3306"
         networks:
             devbox:
-                ipv4_address: 172.28.1.36
+                ipv4_address: 172.28.3.1
         restart: always
 
     ## mongodb
@@ -84,7 +84,7 @@ services:
             - "27018:27017"
         networks:
             devbox:
-                ipv4_address: 172.28.11.5
+                ipv4_address: 172.28.4.1
         restart: always
 
     ### Memcached
@@ -95,7 +95,7 @@ services:
             - "11211:11211"
         networks:
             devbox:
-                ipv4_address: 172.28.1.6
+                ipv4_address: 172.28.5.1
         restart: always
     ### Redis
     redis:
@@ -105,7 +105,7 @@ services:
             - "6379:6379"
         networks:
             devbox:
-                ipv4_address: 172.28.1.7
+                ipv4_address: 172.28.6.1
         restart: always
 
     ### sshtunnel
@@ -123,35 +123,22 @@ services:
         restart: always
         networks:
             devbox:
-                ipv4_address: 172.28.1.20
+                ipv4_address: 172.28.6.1
 
-    ### chrome headless
-    chrome-headless:
-        image:  baykier/chrome-headless
+    ### xunsearch
+    xunsearch:
+        image:  hightman/xunsearch
         ports:
-            - "9222:9222"
-        restart: always
-        extra_hosts:
-            - "icxinli.com:172.28.1.1"
+            - "8383:8383"
+            - "8384:8384"
+        restart: always      
         dns:
             - 114.114.114.114
             - 8.8.8.8
         networks:
             devbox:
-                ipv4_address: 172.28.1.55
-    ### python for android
-    buildozer:
-        privileged: true
-        image: guysoft/p4a:p4a-py3-api28ndk21
-        container_name: buildozer
-        tty: true
-        entrypoint: /bin/sh
-        volumes:
-            - ./:/buildozer/
-            # The following volume let ubuntu machines push android apps via adb
-            - /dev/bus/usb:/dev/bus/usb
-            # The followimg volume lets you run android sdk GUI and manage your sdks
-            - /tmp/.X11-unix:/tmp/.X11-unix
+                ipv4_address: 172.28.7.1
+
     ## elasticsearch
     elasticsearch:
         build:
@@ -174,7 +161,7 @@ services:
                 max-file: "10"
         networks:
             devbox:
-                ipv4_address: 172.28.6.33
+                ipv4_address: 172.28.7.2
         restart: always
     ## logstash
     logstash:
@@ -197,7 +184,7 @@ services:
                 max-file: "10"
         networks:
             devbox:
-                    ipv4_address: 172.28.6.34
+                    ipv4_address: 172.28.7.3
         restart: always
         depends_on:
             - elasticsearch
@@ -213,7 +200,7 @@ services:
             - "5601:5601"
         networks:
             devbox:
-                    ipv4_address: 172.28.6.35
+                    ipv4_address: 172.28.7.4
         restart: always
         depends_on:
             - elasticsearch
@@ -235,26 +222,7 @@ services:
 
         networks:
             devbox:
-                ipv4_address: 172.28.6.36
-        restart: always
-    ## frp server
-    frp-server:
-        image: baykier:frp
-        volumes:
-            - ./conf/frp:/etc/frp
-
-        environment:
-            - FRP_BIND_DOMAIN=xx.x.com
-            - FRP_VHOST_HTTP_PORT=8080
-
-        ports:
-            - "8080:8080"
-        command:
-            frps -c /etc/frp/frps.ini
-
-        networks:
-            devbox:
-                ipv4_address: 172.28.11.2
+                ipv4_address: 172.28.8.1
         restart: always
 
     ### 数据卷

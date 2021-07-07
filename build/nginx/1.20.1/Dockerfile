@@ -4,7 +4,7 @@
 ##                                https://hub.docker.com/r/library/nginx
 ##                               https://github.com/nginxinc/docker-nginx
 
-FROM nginx:1.12-alpine
+FROM nginx:1.21.1-alpine
 
 LABEL author="baykier <1035666345@qq.com>"
 
@@ -31,6 +31,7 @@ EXPOSE 80 443
 ## 默认命令
 
 STOPSIGNAL SIGTERM
+
 
 
 ENTRYPOINT [ "/usr/bin/docker-entrypoint.sh" ]
