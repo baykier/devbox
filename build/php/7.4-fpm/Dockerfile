@@ -2,48 +2,15 @@
 ##                                      Dockerfile for baykier/php:7.4-fpm
 ##
 
-FROM php:7.4-fpm-alpine3.11
+FROM php:7.4.21-fpm-alpine3.14
 
-MAINTAINER baykier 1035666345@qq.com
-
-## 安装 gosu 解决权限问题仅用于开发环境
-## homepage https://github.com/tianon/gosu
-
-ENV GOSU_VERSION 1.11
-RUN set -eux; \
-	\
-	apk add --no-cache --update --virtual .gosu-deps \
-		dpkg \
-		gnupg \
-	; \
-	\
-    apk update; \
-	dpkgArch="$(dpkg --print-architecture | awk -F- '{ print $NF }')"; \
-	wget -O /usr/local/bin/gosu "https://github.com/tianon/gosu/releases/download/$GOSU_VERSION/gosu-$dpkgArch"; \
-	wget -O /usr/local/bin/gosu.asc "https://github.com/tianon/gosu/releases/download/$GOSU_VERSION/gosu-$dpkgArch.asc"; \
-	\
-# verify the signature
-	export GNUPGHOME="$(mktemp -d)"; \
-# for flaky keyservers, consider https://github.com/tianon/pgp-happy-eyeballs, ala https://github.com/docker-library/php/pull/666
-	gpg --batch --keyserver ha.pool.sks-keyservers.net --recv-keys B42F6819007F00F88E364FD4036A9C25BF357DD4; \
-	gpg --batch --verify /usr/local/bin/gosu.asc /usr/local/bin/gosu; \
-	command -v gpgconf && gpgconf --kill all || :; \
-	rm -rf "$GNUPGHOME" /usr/local/bin/gosu.asc; \
-	\
-# clean up fetch dependencies
-	apk del --no-network .gosu-deps; \
-	\
-	chmod +x /usr/local/bin/gosu; \
-# verify that the binary works
-	gosu --version; \
-	gosu nobody true
-
+LABEL author="baykier 1035666345@qq.com"
 
 ## git
 RUN set -ex \
     && apk update \
     ## 使用阿里源
-    && sed -i 's/dl-cdn.alpinelinux.org/mirrors.aliyun.com/g' /etc/apk/repositories \
+    ##&& sed -i 's/dl-cdn.alpinelinux.org/mirrors.aliyun.com/g' /etc/apk/repositories \
     && apk add ca-certificates git
 
 ## 安装php扩展
@@ -60,6 +27,7 @@ RUN set -x \
                                 bcmath \
                                 exif  \
                                 pcntl \
+                                opcache \
     && docker-php-source delete
 
 ## 安装zip扩展
@@ -130,11 +98,11 @@ RUN set -x \
     && docker-php-source delete
 
 ## mongodb 扩展
-ENV MONGODB_VERSION 1.6.1
+ENV MONGODB_VERSION 1.9.1
 RUN set -x \
     && apk add --no-cache --virtual .phpize-deps \
                                     ${PHPIZE_DEPS} \
-    && wget -O /tmp/mongodb-${MONGODB_VERSION}.tgz  https://pecl.php.net/get/mongodb-${MONGODB_VERSION}.tgz \
+    && wget -O /tmp/mongodb-${MONGODB_VERSION}.tgz  http://pecl.php.net/get/mongodb-${MONGODB_VERSION}.tgz \
     && pecl install /tmp/mongodb-${MONGODB_VERSION}.tgz \
     && docker-php-ext-enable mongodb \
     && apk del .phpize-deps \
@@ -148,9 +116,7 @@ RUN set -ex \
     ## 安装tideways-php-ext
     && apk add --no-cache --virtual .phpize-deps    \
                                     ${PHPIZE_DEPS}  \
-    && wget -O /tmp/tideways-php-${TIDEWAYS_VERSION}.tar.gz https://github.com/tideways/php-xhprof-extension/archive/v${TIDEWAYS_VERSION}.tar.gz \
-    && mkdir -p /tmp/tideways-php-${TIDEWAYS_VERSION}-src \
-    && tar -xf /tmp/tideways-php-${TIDEWAYS_VERSION}.tar.gz -C /tmp/tideways-php-${TIDEWAYS_VERSION}-src --strip-components=1 \
+    && git clone --branch v${TIDEWAYS_VERSION} --depth 1 https://github.com/tideways/php-xhprof-extension.git  /tmp/tideways-php-${TIDEWAYS_VERSION}-src\
     && ( \
         cd /tmp/tideways-php-${TIDEWAYS_VERSION}-src \
         && phpize \
@@ -168,7 +134,7 @@ ENV MSGPACK_VERSION "2.1.1"
 RUN set -ex \
     && apk add --no-cache --virtual .phpize-deps    \
                                     ${PHPIZE_DEPS}  \
-    && wget -O /tmp/msgpack-${MSGPACK_VERSION}.tgz  https://pecl.php.net/get/msgpack-${MSGPACK_VERSION}.tgz \
+    && wget -O /tmp/msgpack-${MSGPACK_VERSION}.tgz  http://pecl.php.net/get/msgpack-${MSGPACK_VERSION}.tgz \
     && pecl install /tmp/msgpack-${MSGPACK_VERSION}.tgz \
     && docker-php-ext-enable msgpack \
     && rm -fr /tmp/* \
@@ -181,7 +147,7 @@ RUN set -ex \
     && apk add --no-cache curl-dev \
     && apk add --no-cache --virtual .phpize-deps    \
                                     ${PHPIZE_DEPS}  \
-    && wget -O /tmp/yar-${YAR_VERSION}.tgz  https://pecl.php.net/get/yar-${YAR_VERSION}.tgz \
+    && wget -O /tmp/yar-${YAR_VERSION}.tgz  http://pecl.php.net/get/yar-${YAR_VERSION}.tgz \
     && mkdir -p /tmp/yar-${YAR_VERSION}-src \
     && tar -xf  /tmp/yar-${YAR_VERSION}.tgz -C /tmp/yar-${YAR_VERSION}-src --strip-components=1 \
     && ( \
@@ -198,7 +164,7 @@ RUN set -ex \
 
 ## composer
 
-ENV COMPOSER_VERSION 1.10.10
+ENV COMPOSER_VERSION 2.1.3
 
 RUN set -x \
     && wget -O /usr/bin/composer-${COMPOSER_VERSION}.phar  https://getcomposer.org/download/${COMPOSER_VERSION}/composer.phar \
@@ -208,16 +174,18 @@ RUN set -x \
 ## 设置工作目录
 ENV WORKDIR_SPACE /project
 
-RUN set -ex \
-    && mkdir -p ${WORKDIR_SPACE} /var/log/php
 
 #配置文件
 COPY ./php.ini-dev ${PHP_INI_DIR}/php.ini
 COPY ./php-fpm.d/* ${PHP_INI_DIR}/php-fpm.d/
 COPY ./php-fpm.conf /usr/local/etc/php-fpm.conf
-# COPY conf.d/*.ini ${PHP_INI_DIR}/conf.d/
+COPY ./docker-entrypoint.sh /usr/bin/docker-entrypoint.sh
 
 
+RUN set -ex \
+    && mkdir -p ${WORKDIR_SPACE} /var/log/php \
+    && chmod +x /usr/bin/docker-entrypoint.sh \
+    && apk add --no-cache shadow
 
 WORKDIR ${WORKDIR_SPACE}
 
@@ -225,6 +193,6 @@ VOLUME ${WORKDIR_SPACE}
 
 EXPOSE 9000
 
-ENTRYPOINT gosu root php-fpm
+ENTRYPOINT docker-entrypoint.sh
 
 
