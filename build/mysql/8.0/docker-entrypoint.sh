@@ -2,12 +2,11 @@
 
 #########################################################################################################################################
 ###
-### refer https://github.com/percona/percona-docker/tree/main/percona-server-5.7
+## refer https://github.com/percona/percona-docker/blob/main/percona-server-8.0/ps-entry.sh
 
 
 set -eo pipefail
 shopt -s nullglob
-
 
 # if command starts with an option, prepend mysqld
 if [ "${1:0:1}" = '-' ]; then
@@ -110,7 +109,7 @@ if [ "$1" = 'mysqld' -a -z "$wantHelp" ]; then
 		mkdir -p "$DATADIR"
 
 		echo 'Initializing database'
-		"$@" --initialize-insecure --skip-ssl
+		"$@" --initialize-insecure
 		echo 'Database initialized'
 
 		if command -v mysql_ssl_rsa_setup > /dev/null && [ ! -e "$DATADIR/server-key.pem" ]; then
@@ -173,8 +172,8 @@ if [ "$1" = 'mysqld' -a -z "$wantHelp" ]; then
 			--  or products like mysql-fabric won't work
 			SET @@SESSION.SQL_LOG_BIN=0;
 
-			DELETE FROM mysql.user WHERE user NOT IN ('mysql.sys', 'mysqlxsys', 'root') OR host NOT IN ('localhost') ;
-			SET PASSWORD FOR 'root'@'localhost'=PASSWORD('${MYSQL_ROOT_PASSWORD}') ;
+			DELETE FROM mysql.user WHERE user NOT IN ('mysql.sys', 'mysqlxsys', 'mysql.infoschema', 'mysql.session', 'root') OR host NOT IN ('localhost') ;
+			ALTER USER 'root'@'localhost' IDENTIFIED BY '${MYSQL_ROOT_PASSWORD}' ;
 			GRANT ALL ON *.* TO 'root'@'localhost' WITH GRANT OPTION ;
 			${rootCreate}
 			DROP DATABASE IF EXISTS test ;
@@ -224,12 +223,11 @@ if [ "$1" = 'mysqld' -a -z "$wantHelp" ]; then
 		echo
 	fi
 
-	# exit when MYSQL_INIT_ONLY environment variable is set to avoid starting mysqld
-	if [ ! -z "$MYSQL_INIT_ONLY" ]; then
-		echo 'Initialization complete, now exiting!'
-		exit 0
-	fi
+  # exit when MYSQL_INIT_ONLY environment variable is set to avoid starting mysqld
+  if [ ! -z "$MYSQL_INIT_ONLY" ]; then
+      echo 'Initialization complete, now exiting!'
+      exit 0
+  fi
 fi
 
 exec "$@"
-
