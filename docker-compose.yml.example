@@ -1,9 +1,11 @@
 version: "2.1"
 services:
-    ### nginx service
+    ################################################################
+    ###                   nginx services
+    ###
     nginx:
         image: baykier/nginx:${NGINX_VERSION}
-        environment: 
+        environment:
             - DEVBOX_UID=${DEVBOX_UID}
             - DEVBOX_GID=${DEVBOX_GID}
         volumes_from:
@@ -15,21 +17,26 @@ services:
             - "80:80"
             - "443:443"
         links:
-            - php-fpm-7.4                                                        
+            - php-fpm-7.4
         extra_hosts:
             # add extra hosts mapping for dev
             - "dev.devbox.dev:172.28.1.1"
         networks:
             devbox:
                 ipv4_address: 172.28.1.1
-        restart: always 
-    ## php-fpm-5.6
+        restart: always
+    ##################################################################
+    ###                 php services
+    ###
     php-fpm-5.6:
         image: baykier/php:5.6-wl
         volumes_from:
             - "data-volume"
         volumes:
             - ./log/php/php-fpm-5.6:/var/log/php
+        environment:
+            - DEVBOX_UID=${DEVBOX_UID}
+            - DEVBOX_GID=${DEVBOX_GID}
         extra_hosts:
             - "dev.devbox.dev:172.28.1.1"
         links:
@@ -47,6 +54,9 @@ services:
             - "data-volume"
         volumes:
             - ./log/php/php-fpm-7.4:/var/log/php
+        environment:
+            - DEVBOX_UID=${DEVBOX_UID}
+            - DEVBOX_GID=${DEVBOX_GID}
         links:
             - mysql-5.7
             - redis
@@ -57,7 +67,9 @@ services:
             devbox:
                 ipv4_address: 172.28.2.2
         restart: always
-    ### mysql service
+    ####################################################################
+    ###                 database services
+    ###
     mysql-5.7:
         image: baykier/mysql:5.7
         environment:
@@ -125,13 +137,15 @@ services:
             devbox:
                 ipv4_address: 172.28.6.1
 
+    #########################################################################################################
+    ###              search engine services
     ### xunsearch
     xunsearch:
         image:  hightman/xunsearch
         ports:
             - "8383:8383"
             - "8384:8384"
-        restart: always      
+        restart: always
         dns:
             - 114.114.114.114
             - 8.8.8.8
@@ -139,7 +153,7 @@ services:
             devbox:
                 ipv4_address: 172.28.7.1
 
-    ## elasticsearch
+    ### elasticsearch
     elasticsearch:
         build:
             context: build/elk/elasticsearch/
@@ -224,8 +238,8 @@ services:
             devbox:
                 ipv4_address: 172.28.8.1
         restart: always
-
-    ### 数据卷
+    #####################################################################
+    ###                     数据卷
     data-volume:
         image: tianon/true
         volumes:
