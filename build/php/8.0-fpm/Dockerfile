@@ -10,9 +10,8 @@ LABEL author="baykier 1035666345@qq.com"
 
 ##  git
 RUN set -ex \
-    # 使用镜像
-    # && sed -i 's/dl-cdn.alpinelinux.org/mirrors.aliyun.com/g' /etc/apk/repositories \
-    && sed -i 's/dl-cdn.alpinelinux.org/mirrors.tuna.tsinghua.edu.cn/g' /etc/apk/repositories \
+    ## 使用国内源
+    && sed -i 's/dl-cdn.alpinelinux.org/mirrors.ustc.edu.cn/g' /etc/apk/repositories \
     && apk update \
     && apk add ca-certificates git shadow
 
@@ -109,6 +108,18 @@ RUN set -x \
     && docker-php-ext-enable mongodb \
     && apk del .phpize-deps \
     && rm -fr /tmp/mongodb-${MONGODB_VERSION}.tgz
+
+## ev 扩展
+## https://pecl.php.net/package/ev
+ENV EV_VERSION 1.1.2
+RUN set -x \
+    && apk add --no-cache --virtual .phpize-deps \
+                                    ${PHPIZE_DEPS} \
+    && wget -O /tmp/ev-${EV_VERSION}.tgz  http://pecl.php.net/get/ev-${EV_VERSION}.tgz \
+    && pecl install /tmp/ev-${EV_VERSION}.tgz \
+    && docker-php-ext-enable ev \
+    && apk del .phpize-deps \
+    && rm -fr /tmp/ev-${EV_VERSION}.tgz
 
 
 ## composer

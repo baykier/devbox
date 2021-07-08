@@ -9,8 +9,8 @@ LABEL author="baykier 1035666345@qq.com"
 ## git
 RUN set -ex \
     && apk update \
-    ## 使用阿里源
-    ##&& sed -i 's/dl-cdn.alpinelinux.org/mirrors.aliyun.com/g' /etc/apk/repositories \
+    ## 使用国内源
+    && sed -i 's/dl-cdn.alpinelinux.org/mirrors.ustc.edu.cn/g' /etc/apk/repositories \
     && apk add ca-certificates git
 
 ## 安装php扩展
@@ -161,6 +161,18 @@ RUN set -ex \
     && docker-php-ext-enable yar \
     && rm -fr /tmp/* \
     && apk del .phpize-deps
+
+## ev 扩展
+## https://pecl.php.net/package/ev
+ENV EV_VERSION 1.1.2
+RUN set -x \
+    && apk add --no-cache --virtual .phpize-deps \
+                                    ${PHPIZE_DEPS} \
+    && wget -O /tmp/ev-${EV_VERSION}.tgz  http://pecl.php.net/get/ev-${EV_VERSION}.tgz \
+    && pecl install /tmp/ev-${EV_VERSION}.tgz \
+    && docker-php-ext-enable ev \
+    && apk del .phpize-deps \
+    && rm -fr /tmp/ev-${EV_VERSION}.tgz
 
 ## composer
 
