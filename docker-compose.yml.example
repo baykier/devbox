@@ -19,6 +19,7 @@ services:
         links:
             - php-fpm-7.4
             - php-fpm-8.0
+            - postgres-9.6
         extra_hosts:
             # add extra hosts mapping for dev
             - "dev.devbox.dev:172.28.1.1"
@@ -126,6 +127,22 @@ services:
         networks:
             devbox:
                 ipv4_address: 172.28.3.2
+        restart: always
+
+    ## postgres
+
+    postgres-9.6:
+        image: postgres:9.6.22-alpine
+        environment:
+            - POSTGRES_USER=root
+            - POSTGRES_PASSWORD=root
+        volumes:
+            - ./data/postgresql:/var/lib/postgresql/data
+        ports:
+            - "5432:5432"
+        networks:
+            devbox:
+                ipv4_address: 172.28.3.3
         restart: always
 
     ## mongodb
