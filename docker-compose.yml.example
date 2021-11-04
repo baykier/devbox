@@ -19,7 +19,7 @@ services:
         links:
             - php-fpm-7.4
             - php-fpm-8.0
-            - postgres-9.6
+            - openface
         extra_hosts:
             # add extra hosts mapping for dev
             - "dev.devbox.dev:172.28.1.1"
@@ -293,6 +293,16 @@ services:
         networks:
             devbox:
                 ipv4_address: 172.28.8.1
+        restart: always
+    ########################################################################
+    ##                    openface
+    openface:
+        image: baykier/openface:cgzdai
+        volumes_from:
+            - "data-volume"
+        networks:
+            devbox:
+                ipv4_address: 172.28.9.1
         restart: always
     #####################################################################
     ###                     数据卷
