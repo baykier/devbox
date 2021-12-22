@@ -23,6 +23,7 @@ services:
             - rocketmq-console
             - seata-server
             - sentinel-dashboard
+            - nacos
         extra_hosts:
             # add extra hosts mapping for dev
             - "dev.devbox.dev:172.28.1.1"
