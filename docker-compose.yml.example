@@ -19,7 +19,10 @@ services:
         links:
             - php-fpm-7.4
             - php-fpm-8.0
-            - openface
+            - php-fpm-5.6
+            - rocketmq-console
+            - seata-server
+            - sentinel-dashboard
         extra_hosts:
             # add extra hosts mapping for dev
             - "dev.devbox.dev:172.28.1.1"
@@ -43,7 +46,7 @@ services:
             - "dev.devbox.dev:172.28.1.1"
         links:
             - mysql-5.7
-            - mongodb
+            #- mongodb
             - redis
         networks:
             devbox:
@@ -63,6 +66,8 @@ services:
             - mysql-5.7
             - redis
             #- xunsearch
+        dns:
+            - 114.114.114.114
         extra_hosts:
             - "dev.devbox.dev:172.28.1.1"
         networks:
@@ -304,6 +309,103 @@ services:
             devbox:
                 ipv4_address: 172.28.9.1
         restart: always
+    ########################################################################
+    ##
+    ##                 java stack
+
+    ## nacos
+    nacos:
+        image: nacos/nacos-server:${NACOS_VERSION}
+        environment:
+            - PREFER_HOST_MODE=hostname
+            - MODE=standalone
+        volumes:
+            - ./log/nacos/:/home/nacos/logs
+            - ./conf/nacos/custom.properties:/home/nacos/init.d/custom.properties
+        ports:
+            - "8848:8848"
+            - "9848:9848"
+        networks:
+            devbox:
+                ipv4_address: 172.28.10.1
+        restart: always
+    ## rocketmq-namesrv
+    rocketmq-namesrv:
+        image: foxiswho/rocketmq:${ROCKET_MQ_VERSION}
+        environment:
+            - NAMESRV_ADDR="rocketmq-namesrv:9876"
+            - JAVA_OPT_EXT=-Duser.home=/home/rocketmq -Xms512M -Xmx512M -Xmn128m
+        volumes:
+            - ./data/rocketmq/${ROCKET_MQ_VERSION}/namesrv/store:/home/rocketmq/store
+            - ./log/rocketmq/${ROCKET_MQ_VERSION}/namesrv/logs:/home/rocketmq/logs
+        ports:
+            - 9876:9876
+        networks:
+            devbox:
+                ipv4_address: 172.28.10.2
+        restart: always
+        command: ["/home/rocketmq/rocketmq-4.8.0/bin/mqnamesrv"]
+
+    ## rocketmq-broker
+    rocketmq-broker:
+        image: foxiswho/rocketmq:${ROCKET_MQ_VERSION}
+        environment:
+            - JAVA_OPT_EXT=-Duser.home=/home/rocketmq -Xms512M -Xmx512M -Xmn128m
+        volumes:
+            - ./data/rocketmq/${ROCKET_MQ_VERSION}/broker/store:/home/rocketmq/store
+            - ./log/rocketmq/${ROCKET_MQ_VERSION}/broker/logs:/home/rocketmq/logs
+            - ./conf/rocketmq/brokerconf/broker.conf:/etc/rocketmq/broker.conf
+        ports:
+            - 10909:10909
+            - 10911:10911
+        networks:
+            devbox:
+                ipv4_address: 172.28.10.3
+        restart: always
+        depends_on:
+            - rocketmq-namesrv
+        command: ["/home/rocketmq/rocketmq-4.8.0/bin/mqbroker","-c","/etc/rocketmq/broker.conf","-n","rocketmq-namesrv:9876","autoCreateTopicEnable=true"]
+
+    ## rocketmq-console
+    rocketmq-console:
+        image: styletang/rocketmq-console-ng
+        environment:
+            - JAVA_OPT_EXT=-Drocketmq.namesrv.addr=rocketmq-namesrv:9876 -Dcom.rocketmq.sendMessageWithVIPChannel=false
+        ports:
+            - 8180:8080
+        networks:
+            devbox:
+                ipv4_address: 172.28.10.4
+        restart: always
+        depends_on:
+            - rocketmq-broker
+
+
+    ## seata-server
+    seata-server:
+        image: seataio/seata-server:1.4.2
+        hostname: seata-server
+        ports:
+            - 8091:8091
+        environment:
+            - SEATA_PORT=8091
+            - SEATA_IP=172.28.10.5
+        networks:
+            devbox:
+                ipv4_address: 172.28.10.5
+        restart: always
+
+    ## sentinel-dashboard
+    sentinel-dashboard:
+        image: bladex/sentinel-dashboard:1.8.0
+        hostname: sentinel-server
+        ports:
+            - 8858:8858
+        networks:
+            devbox:
+                ipv4_address: 172.28.10.6
+        restart: always
+
     #####################################################################
     ###                     数据卷
     data-volume:
