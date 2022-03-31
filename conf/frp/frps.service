@@ -1,0 +1,14 @@
+[Unit]
+Description=FRP Server Daemon
+
+[Service]
+Type=simple
+AmbientCapabilities=CAP_NET_BIND_SERVICE
+ExecStart=/opt/bin/frps -c /opt/etc/frps.ini
+Restart=always
+RestartSec=2s
+User=nobody
+LimitNOFILE=infinity
+
+[Install]
+WantedBy=multi-user.target
