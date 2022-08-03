@@ -6,6 +6,7 @@ log/nginx/*
 log/mongo/*
 project/*
 conf/nginx/*
+log/nacos/*
 .env
 docker-compose.yml
 .idea/*
