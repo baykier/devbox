@@ -302,6 +302,7 @@ services:
         environment:
             - JAVA_OPT_EXT=-Duser.home=/home/rocketmq -Xms512M -Xmx512M -Xmn128m
         volumes:
+            # chmod 777 data log dirs 本地映射目录权限改为777， 否则一直重庆
             - ./data/rocketmq/${ROCKET_MQ_VERSION}/broker/store:/home/rocketmq/store
             - ./log/rocketmq/${ROCKET_MQ_VERSION}/broker/logs:/home/rocketmq/logs
             - ./conf/rocketmq/brokerconf/broker.conf:/etc/rocketmq/broker.conf
