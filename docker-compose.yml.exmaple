@@ -257,6 +257,12 @@ services:
         environment:
             - PREFER_HOST_MODE=hostname
             - MODE=standalone
+            - SPRING_DATASOURCE_PLATFORM=mysql
+            - MYSQL_SERVICE_HOST=mysql-5.7
+            - MYSQL_SERVICE_DB_NAME=ry-config
+            - MYSQL_SERVICE_USER=root
+            - MYSQL_SERVICE_PASSWORD=root
+            - NACOS_DEBUG=true
         volumes:
             - ./log/nacos/:/home/nacos/logs
             - ./conf/nacos/custom.properties:/home/nacos/init.d/custom.properties
@@ -264,10 +270,11 @@ services:
             - "8848:8848"
             - "9848:9848"
         links:
-            - mysql-5.7
             - redis
             - rocketmq-console
             - seata-server
+        depends_on:
+            - mysql-5.7
         networks:
             devbox:
                 ipv4_address: 172.28.10.1
